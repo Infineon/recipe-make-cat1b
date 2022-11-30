@@ -104,7 +104,7 @@ elif [ "$TOOLCHAIN" == "ARM" ]; then
 
     $PYTHON_COMMAND $SCRIPT_PATH/bin2hex.py $APP_PATH/$APP_NAME.bin/bootstrap $APP_PATH/$APP_NAME.bin/bootstrap.hex;
     #$SCRIPT_PATH/bin2hex.py --offset=$APP_FLASH_OFFSET $APP_PATH.bin/app $APP_PATH.bin/app.hex;
-    $PYTHON_COMMAND $SCRIPT_PATH/bin2hex.py --offset=0x21B0 $APP_PATH/$APP_NAME.bin/app $APP_PATH/$APP_NAME.bin/app.hex;
+    $PYTHON_COMMAND $SCRIPT_PATH/bin2hex.py --offset=0x25B0 $APP_PATH/$APP_NAME.bin/app $APP_PATH/$APP_NAME.bin/app.hex;
     $PYTHON_COMMAND $SCRIPT_PATH/hexmerge.py $APP_PATH/$APP_NAME.bin/bootstrap.hex $APP_PATH/$APP_NAME.bin/app.hex -o $APP_PATH/$APP_NAME.bin/$APP_NAME.hex;
     $PYTHON_COMMAND $SCRIPT_PATH/hex2bin.py $APP_PATH/$APP_NAME.bin/$APP_NAME.hex $APP_PATH/$APP_NAME.bin/$APP_NAME.bin;
     cp $APP_PATH/$APP_NAME.bin/$APP_NAME.bin $APP_PATH/$APP_NAME$APP_EXT.bin;

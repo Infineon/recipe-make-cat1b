@@ -26,12 +26,16 @@ ifeq ($(WHICHFILE),true)
 $(info Processing $(lastword $(MAKEFILE_LIST)))
 endif
 
-include $(CY_INTERNAL_BASELIB_PATH)/make/recipe/defines_common.mk
+include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/defines_common.mk
 
 
 ################################################################################
 # General
 ################################################################################
+#
+# Compactibility interface for this recipe make
+#
+MTB_RECIPE__INTERFACE_VERSION=1
 
 #
 # List the supported toolchains
@@ -49,42 +53,16 @@ PC_SYMBOL=Reset_Handler
 SP_SYMBOL=__StackTop
 endif
 
-# Linker script file name
-CY_STARTUP=cyw20829
-
-#
-# Define the default core
-#
-CORE?=CM33
-
 # only has external memory
-CY_START_FLASH=0
-CY_START_SRAM=0x20000000
+_MTB_RECIPE__START_FLASH=0
 CY_START_EXTERNAL_FLASH=0x60000000
-
-#
-# Core specifics
-#
-CY_LINKERSCRIPT_SUFFIX=cm33
 
 #
 # Architecure specifics
 #
-CY_PSOC_ARCH=psoc6_02
-CY_PSOC_DIE_NAME=PSoC6A2M
-CY_OPENOCD_CHIP_NAME=cyw20829
-CY_OPENOCD_DEVICE_CFG=cyw20829.cfg
-CY_JLINK_DEVICE_CFG=CYW20829_tm
-
-#
-# Flash memory specifics
-# only has external memory
-CY_MEMORY_FLASH?=0
-
-#
-# SRAM memory specifics
-# 0x20000
-CY_MEMORY_SRAM=131072
+_MTB_RECIPE__OPENOCD_CHIP_NAME=cyw20829
+_MTB_RECIPE__OPENOCD_DEVICE_CFG=cyw20829.cfg
+_MTB_RECIPE__JLINK_DEVICE_CFG=CYW20829_tm
 
 #
 # The max external memory size supported
@@ -92,83 +70,49 @@ CY_MEMORY_SRAM=131072
 #
 CY_MEMORY_EXTERNAL_FLASH=0x08000000
 
-#
-# linker scripts
-#
-CY_LINKER_SCRIPT_NAME=cyw20829_ns_$(APPTYPE)_cbus
-
-
-################################################################################
-# BSP Generation
-################################################################################
-
-DEVICE_GEN?=$(DEVICE)
-
-# Paths
-CY_BSP_TEMPLATES_DIR=$(CY_CONDITIONAL_DEVICESUPPORT_PATH)/devices/COMPONENT_CAT1B/templates/COMPONENT_MTB
-CY_TEMPLATES_DIR=$(CY_BSP_TEMPLATES_DIR)
-CY_BSP_DESTINATION_ABSOLUTE=$(abspath $(CY_TARGET_GEN_DIR))
-
-# Command for searching files in the template directory
-CY_BSP_SEARCH_FILES_CMD=\
-	-name system_cat1b.h \
-	-o -name system_cyw20829.h \
-	-o -name *$(CY_LINKER_SCRIPT_NAME)\.*
-
-# There is only 1 linker script and startup file. No old files to backup
-CY_SEARCH_FILES_CMD=
-
-
 ################################################################################
 # Paths
 ################################################################################
-
-# Paths used in program/debug
-ifeq ($(CY_DEVICESUPPORT_PATH),)
-CY_ECLIPSE_OPENOCD_SVD_PATH?=$$\{cy_prj_path\}/$(dir $(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))devices/COMPONENT_CAT1B/svd/$(CY_STARTUP).svd
-CY_VSCODE_OPENOCD_SVD_PATH?=$(dir $(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))devices/COMPONENT_CAT1B/svd/$(CY_STARTUP).svd
-else
-CY_ECLIPSE_OPENOCD_SVD_PATH?=$$\{cy_prj_path\}/$(CY_DEVICESUPPORT_PATH)/devices/COMPONENT_CAT1B/svd/$(CY_STARTUP).svd
-CY_VSCODE_OPENOCD_SVD_PATH?=$(CY_DEVICESUPPORT_PATH)/devices/COMPONENT_CAT1B/svd/$(CY_STARTUP).svd
-endif
 
 # Path to debug certificatee
 CY_DBG_CERTIFICATE_PATH?=./packets/debug_cert.bin
 
-CY_QSPI_FLM_DIR_OUTPUT?=$(patsubst %/,%,$(CY_QSPI_FLM_DIR))
+CY_QSPI_FLM_DIR_OUTPUT?=$(CY_QSPI_FLM_DIR)
 ifeq ($(CY_QSPI_FLM_DIR_OUTPUT),)
-CY_OPENOCD_QSPI_FLASHLOADER=
-CY_OPENOCD_QSPI_FLASHLOADER_WITH_FLAG=
+_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER=
+_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER_WITH_FLAG=
 else
-CY_OPENOCD_QSPI_FLASHLOADER=set QSPI_FLASHLOADER $(CY_INTERNAL_APPLOC)/$(CY_QSPI_FLM_DIR_OUTPUT)/CYW208xx_SMIF.FLM
-CY_OPENOCD_QSPI_FLASHLOADER_WITH_FLAG="-c \\\&quot\\\;$(CY_OPENOCD_QSPI_FLASHLOADER)\\\&quot\\\;\\\&\\\#13\\\;\\\&\\\#10\\\;"
+_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER=set QSPI_FLASHLOADER $(MTB_TOOLS__PRJ_DIR)/$(patsubst %/,%,$(CY_QSPI_FLM_DIR_OUTPUT))/CYW208xx_SMIF.FLM
+_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER_WITH_FLAG=-c &quot;$(_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER)&quot;&\#13;&\#10;
 endif
 
 ################################################################################
 # IDE specifics
 ################################################################################
 
+MTB_RECIPE__IDE_SUPPORTED:=eclipse vscode uvision5 ewarm8
+
 # Set the output file paths
 ifneq (ram,$(APPTYPE))
 ifneq ($(CY_BUILD_LOCATION),)
-CY_PROG_FILE=$(CY_INTERNAL_BUILD_LOC)/$(TARGET)/$(CONFIG)/$(APPNAME).final.hex
+_MTB_RECIPE__ECLIPSE_PROG_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex
 else
-CY_PROG_FILE=\$$\{cy_prj_path\}/$(notdir $(CY_INTERNAL_BUILD_LOC))/$(TARGET)/$(CONFIG)/$(APPNAME).final.hex
+_MTB_RECIPE__ECLIPSE_PROG_FILE=$${cy_prj_path}/$(notdir $(MTB_TOOLS__OUTPUT_BASE_DIR))/$(TARGET)/$(CONFIG)/$(APPNAME).final.hex
 endif
 endif
 
 ifeq (ram,$(APPTYPE))
-CY_ECLIPSE_TEMPLATES_WILDCARD=ram/*
+_MTB_RECIPE__ECLIPSE_TEMPLATE_SUBDIR=ram
 else
-CY_ECLIPSE_TEMPLATES_WILDCARD=flash/*
+_MTB_RECIPE__ECLIPSE_TEMPLATE_SUBDIR=flash
 endif
 
 ifeq ($(filter vscode,$(MAKECMDGOALS)),vscode)
 ifneq (ram,$(APPTYPE))
 ifneq ($(CY_BUILD_LOCATION),)
-CY_HEX_FILE=$(CY_INTERNAL_BUILD_LOC)/$(TARGET)/$(CONFIG)/$(APPNAME).final.hex
+_MTB_RECIPE__HEX_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex
 else
-CY_HEX_FILE=./$(notdir $(CY_INTERNAL_BUILD_LOC))/$(TARGET)/$(CONFIG)/$(APPNAME).final.hex
+_MTB_RECIPE__HEX_FILE=./$(notdir $(MTB_TOOLS__OUTPUT_BASE_DIR))/$(TARGET)/$(CONFIG)/$(APPNAME).final.hex
 endif
 endif
 
@@ -195,55 +139,52 @@ CY_VSCODE_JSON_PROCESSING=\
 	fi;
 endif
 
-CY_VSCODE_ARGS+="s|&&PC_SYMBOL&&|$(PC_SYMBOL)|g;"\
-				"s|&&SP_SYMBOL&&|$(SP_SYMBOL)|g;"\
-				"s|&&CY_OPENOCD_QSPI_FLASHLOADER&&|$(CY_OPENOCD_QSPI_FLASHLOADER)|g;"\
-				"s|&&CY_JLINK_CFG&&|$(CY_JLINK_DEVICE_CFG)|g;"\
-				"s|&&CY_QSPI_CFG_PATH&&|$(CY_OPENOCD_QSPI_CFG_PATH)|g;"\
-				"s|&&CY_DBG_CERTIFICATE_PATH&&|$(CY_DBG_CERTIFICATE_PATH)|g;"
+$(MTB_RECIPE__IDE_RECIPE_DATA_FILE)_vscode:
+	$(MTB__NOISE)echo "s|&&PC_SYMBOL&&|$(PC_SYMBOL)|g;" > $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);\
+	echo "s|&&SP_SYMBOL&&|$(SP_SYMBOL)|g;" >> $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);\
+	echo "s|&&_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER&&|$(_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER)|g;" >> $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);\
+	echo "s|&&_MTB_RECIPE__JLINK_CFG&&|$(_MTB_RECIPE__JLINK_DEVICE_CFG)|g;" >> $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);\
+	echo "s|&&_MTB_RECIPE__QSPI_CFG_PATH&&|$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH)|g;" >> $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);\
+	echo "s|&&_MTB_RECIPE__DBG_CERTIFICATE_PATH&&|$(CY_DBG_CERTIFICATE_PATH)|g;" >> $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);
 endif
 
 ifeq ($(filter eclipse,$(MAKECMDGOALS)),eclipse)
-CY_ECLIPSE_ARGS+="s|&&CY_JLINK_CFG&&|$(CY_JLINK_DEVICE_CFG)|;"\
-				"s|&&PC_SYMBOL&&|$(PC_SYMBOL)|;"\
-				"s|&&SP_SYMBOL&&|$(SP_SYMBOL)|;"\
-				"s|&&CY_QSPI_CFG_PATH&&|$(CY_OPENOCD_QSPI_CFG_PATH_WITH_FLAG)|g;"\
-				"s|&&CY_OPENOCD_QSPI_FLASHLOADER&&|$(CY_OPENOCD_QSPI_FLASHLOADER_WITH_FLAG)|g;"\
-				"s|&&CY_DBG_CERTIFICATE_PATH&&|$(CY_DBG_CERTIFICATE_PATH)|g;"
+
+eclipse_textdata_file:
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__JLINK_CFG&&=$(_MTB_RECIPE__JLINK_DEVICE_CFG))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&PC_SYMBOL&&=$(PC_SYMBOL))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&SP_SYMBOL&&=$(SP_SYMBOL))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__QSPI_CFG_PATH&&=$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_WITH_FLAG))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER&&=$(_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER_WITH_FLAG))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__DBG_CERTIFICATE_PATH&&=$(CY_DBG_CERTIFICATE_PATH))
+
+_MTB_ECLIPSE_TEMPLATE_RECIPE_SEARCH:=$(MTB_TOOLS__RECIPE_DIR)/make/scripts/eclipse/$(_MTB_RECIPE__ECLIPSE_TEMPLATE_SUBDIR)
+_MTB_ECLIPSE_TEMPLATE_RECIPE_APP_SEARCH:=$(MTB_TOOLS__RECIPE_DIR)/make/scripts/eclipse/Application
+
+eclipse_recipe_metadata_file:
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_METADATA_FILE),RECIPE_TEMPLATE=$(_MTB_ECLIPSE_TEMPLATE_RECIPE_SEARCH))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_METADATA_FILE),RECIPE_APP_TEMPLATE=$(_MTB_ECLIPSE_TEMPLATE_RECIPE_APP_SEARCH))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_METADATA_FILE),PROJECT_UUID=&&PROJECT_UUID&&)
 endif
 
-CY_IAR_DEVICE_NAME=$(DEVICE)
+ewarm8_recipe_data_file:
+	$(call mtb__file_write,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(DEVICE))
 
-CY_CMSIS_ARCH_NAME=AIROC_DFP
-CY_CMSIS_VENDOR_NAME=Infineon
-CY_CMSIS_VENDOR_ID=7
-CY_CMSIS_SPECIFY_CORE=1
+ewarm8: ewarm8_recipe_data_file
 
-################################################################################
-# Tools specifics
-################################################################################
+_MTB_RECIPE__CMSIS_ARCH_NAME:=AIROC_DFP
+_MTB_RECIPE__CMSIS_VENDOR_NAME:=Infineon
+_MTB_RECIPE__CMSIS_VENDOR_ID:=7
 
-CY_SUPPORTED_TOOL_TYPES+=\
-	qspi-configurator
+_MTB_RECIPE__CMSIS_PNAME:=Cortex-M33
 
-# Player smartio also uses the .modus extension
-modus_DEFAULT_TYPE+=device-configurator smartio-configurator
+_MTB_RECIPE__CMSIS_LDFLAGS:=
 
-# Player capsense-tuner shares its existence with capsense-configurator
-CY_OPEN_NEWCFG_XML_TYPES+=capsense-tuner
+uvision5_recipe_data_file:
+	$(call mtb__file_write,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_ARCH_NAME))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_VENDOR_NAME))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_VENDOR_ID))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_PNAME))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_LDFLAGS))
 
-CY_SUPPORTED_TOOL_TYPES+=\
-	device-configurator\
-	seglcd-configurator\
-	smartio-configurator\
-	dfuh-tool
-
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_BLE)))
-CY_SUPPORTED_TOOL_TYPES+=bt-configurator
-CY_OPEN_bt_configurator_DEVICE=--device 43xxx
-endif
-
-ifneq ($(filter $(DEVICE),$(CY_DEVICES_WITH_DIE_CYW20829)),)
-# Always overwrite VFP_SELECT for 20829 devices
-VFP_SELECT:=softfloat
-endif
+uvision5: uvision5_recipe_data_file

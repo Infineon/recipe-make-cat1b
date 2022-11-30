@@ -179,9 +179,9 @@ L1_APP_DESCR_ADDR=$(printf "0x%x" `expr $TOC2_SIZE`)
 # default bootstrap address when APP_TYPE is l1ram
 BOOT_STRAP_DST_ADDR_DEFAULT_L1RAM=0x20000800
 # default bootstrap address when APP_TYPE is flash
-BOOT_STRAP_DST_ADDR_DEFAULT_FLASH=0x2001E000
+BOOT_STRAP_DST_ADDR_DEFAULT_FLASH=0x2001DC00
 # default bootstrap size
-BOOT_STRAP_SIZE_DEFAULT=0x2000
+BOOT_STRAP_SIZE_DEFAULT=0x2400
 # L1_APP_DESCR entries in hexadecimal
 if [ "$LCS" == "NORMAL_NO_SECURE" ]; then
 	BOOT_STRAP_ADDR=0x50 # Fix address for un-signed image
