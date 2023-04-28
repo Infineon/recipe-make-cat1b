@@ -10,8 +10,5 @@ monitor arm semihosting enable
 # Set temporary breakpoint at main
 tbreak main
 
-# Print registers
-monitor reg
-
 # Continue program execution
 continue

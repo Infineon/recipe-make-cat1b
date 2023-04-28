@@ -33,7 +33,7 @@ This version of the 20829 build system was validated for compatibility with the 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
 | ModusToolbox Software Environment         | 2.0     |
-| GCC Compiler                              | 10.3    |
+| GCC Compiler                              | 11.3    |
 | IAR Compiler                              | 9.3     |
 | ARM Compiler                              | 6.16    |
 

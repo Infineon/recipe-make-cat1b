@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2021 Cypress Semiconductor Corporation
+# Copyright 2018-2023 Cypress Semiconductor Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,43 +79,44 @@ else ifeq ($(TOOLCHAIN),GCC_ARM)
 _MTB_RECIPE__MXSV2_POSTBUILD+=$(MTB_TOOLCHAIN_GCC_ARM__ELF2BIN) $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).elf -S -O binary $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin;
 endif
 
-# Python required below
-CY_PYTHON_REQUIREMENT=true
+# Pass bootstrap size to flash linker script.
+ifeq ($(APPTYPE),flash)
+ifeq ($(TOOLCHAIN),ARM)
+BOOTSTRAP_SIZE?=0x00002400
+_MTB_RECIPE__MXSV2_LDFLAGS=--predefine='-DAPP_BOOTSTRAP_SIZE=$(BOOTSTRAP_SIZE)'
+else ifeq ($(TOOLCHAIN),IAR)
+BOOTSTRAP_SIZE?=0x00003A00
+_MTB_RECIPE__MXSV2_LDFLAGS+=--config_def APP_BOOTSTRAP_SIZE=$(BOOTSTRAP_SIZE)
+else ifeq ($(TOOLCHAIN),GCC_ARM)
+BOOTSTRAP_SIZE?=0x00002400
+_MTB_RECIPE__MXSV2_LDFLAGS+=-Wl,--defsym,APP_BOOTSTRAP_SIZE=$(BOOTSTRAP_SIZE)
+endif
+endif
+MTB_RECIPE__LDFLAGS+=$(_MTB_RECIPE__MXSV2_LDFLAGS)
 
 # Postbuilds for l1ram and flash applications for second stage
 ifeq ($(APPTYPE),$(filter $(APPTYPE),l1ram flash))
 ifeq ($(CY_SECONDSTAGE),true)
 
-ifeq ($(wildcard $(CY_TOOL_python_EXE_ABS)),)
-ifneq ($(_MTB_TOOLS__WHICH_CYGPATH),)
-_MTB_RECIPE_20829_PYTHON_EXE_PATH=$(call mtb__get_dir,$(shell cygpath -m --absolute $$(which python)))
-else
-_MTB_RECIPE_20829_PYTHON_EXE_PATH=$(call mtb__get_dir,$(shell which python))
-endif
-else
-_MTB_RECIPE_20829_PYTHON_EXE_PATH=$(call mtb__get_dir,$(CY_PYTHON_PATH))
-endif
+_MTB_RECIPE_20829_SREC_CAT_UTIL=$(CY_TOOL_srec_cat_EXE_ABS)
 
-_MTB_RECIPE_20829_PYTHON_BIN2HEX_PATH=$(strip $(call mtb__get_file_path,,bin2hex.py,bin2hex.py))
-_MTB_RECIPE_20829_PYTHON_SCRIPT_PATH=$(call mtb__get_dir,$(_MTB_RECIPE_20829_PYTHON_BIN2HEX_PATH))
-
-ifeq ($(_MTB_RECIPE_20829_PYTHON_BIN2HEX_PATH),)
-CY_MESSAGE_bin2hex="bin2hex.py" could not be found.\
+ifeq ($(_MTB_RECIPE_20829_SREC_CAT_UTIL),)
+CY_MESSAGE_srec_cat="srec_cat" could not be found.\
 	This is needed to finish running the postbuild steps. Ensure that the module is present to\
 	complete the build for this app. The rest of the postbuild steps will now be skipped.
-$(eval $(call CY_MACRO_WARNING,CY_MESSAGE_bin2hex,$(CY_MESSAGE_bin2hex)))
+$(eval $(call CY_MACRO_WARNING,CY_MESSAGE_srec_cat,$(CY_MESSAGE_srec_cat)))
 else
 ifeq ($(APPTYPE),flash)
-_MTB_RECIPE__MXSV2_POSTBUILD+=$(MTB_TOOLS__BASH_CMD) $(MTB_TOOLS__RECIPE_DIR)/make/scripts/20829/flash_postbuild.sh "$(TOOLCHAIN)" "$(MTB_TOOLS__OUTPUT_CONFIG_DIR)" "$(APPNAME)" "$(CY_PYTHON_PATH)" "$(_MTB_RECIPE_20829_PYTHON_SCRIPT_PATH)" "$(MTB_TOOLCHAIN_GCC_ARM__BASE_DIR)/bin";
+_MTB_RECIPE__MXSV2_POSTBUILD+=$(MTB_TOOLS__BASH_CMD) $(MTB_TOOLS__RECIPE_DIR)/make/scripts/20829/flash_postbuild.sh "$(TOOLCHAIN)" "$(MTB_TOOLS__OUTPUT_CONFIG_DIR)" "$(APPNAME)" "$(MTB_TOOLCHAIN_GCC_ARM__BASE_DIR)/bin" "$(_MTB_RECIPE_20829_SREC_CAT_UTIL)" "$(BOOTSTRAP_SIZE)";
 endif
 
 APP_SLOT_SIZE?= 0x20000
 APP_ENCRYPTION?= 0
 
-_MTB_RECIPE__MXSV2_POSTBUILD+=$(MTB_TOOLS__BASH_CMD) $(MTB_TOOLS__RECIPE_DIR)/make/scripts/20829/run_toc2_generator.sh "$(APP_SECURITY_TYPE)" "$(MTB_TOOLS__OUTPUT_CONFIG_DIR)" "$(APPNAME)" "$(APPTYPE)" "$(MTB_TOOLS__TARGET_DIR)" "NONE" "$(MTB_TOOLCHAIN_GCC_ARM__BASE_DIR)" "" $(APP_SLOT_SIZE) $(APP_ENCRYPTION) "";
-_MTB_RECIPE__MXSV2_POSTBUILD+=$(CY_PYTHON_PATH) $(_MTB_RECIPE_20829_PYTHON_BIN2HEX_PATH) --offset=0x60000000 $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.bin $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex;
+_MTB_RECIPE__MXSV2_POSTBUILD+=$(MTB_TOOLS__BASH_CMD) $(MTB_TOOLS__RECIPE_DIR)/make/scripts/20829/run_toc2_generator.sh "$(APP_SECURITY_TYPE)" "$(MTB_TOOLS__OUTPUT_CONFIG_DIR)" "$(APPNAME)" "$(APPTYPE)" "$(MTB_TOOLS__TARGET_DIR)" "NONE" "$(MTB_TOOLCHAIN_GCC_ARM__BASE_DIR)" "" $(APP_SLOT_SIZE) $(APP_ENCRYPTION) "" "$(BOOTSTRAP_SIZE)" "$(DEVICE_$(MPN_LIST)_SRAM_KB)";
+_MTB_RECIPE__MXSV2_POSTBUILD+=$(_MTB_RECIPE_20829_SREC_CAT_UTIL) $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.bin -Binary -offset 0x60000000 -o $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex -Intel -Output_Block_Size=16;
 _MTB_RECIPE__MXSV2_POSTBUILD+=rm -rf $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin;
-endif #($(_MTB_RECIPE_20829_PYTHON_SCRIPT_PATH),)
+endif #($(_MTB_RECIPE_20829_SREC_CAT_UTIL),)
 
 endif
 endif # apptype l1ram flash

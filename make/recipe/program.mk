@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2021 Cypress Semiconductor Corporation
+# Copyright 2018-2023 Cypress Semiconductor Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +30,7 @@ endif
 include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/program_common.mk
 
 _MTB_RECIPE__GDB_ARGS=$(MTB_TOOLS__RECIPE_DIR)/make/scripts/gdbinit
+
 _MTB_RECIPE__OPENOCD_DEBUG_PREFIX=$(_MTB_RECIPE_OPENOCD_CHIP_NAME).cm33 configure -rtos auto -rtos-wipe-on-reset-halt 1; gdb_breakpoint_override hard;
 
 ifeq ($(TOOLCHAIN),A_Clang)
@@ -68,7 +69,30 @@ _MTB_RECIPE_OPENOCD_PROGRAM=$(_MTB_RECIPE_OPENOCD_PREPARE_APP) resume; exit;
 else
 _MTB_RECIPE_OPENOCD_ERASE=init; reset init; erase_all; exit;
 _MTB_RECIPE_OPENOCD_DEBUG=$(_MTB_RECIPE__OPENOCD_DEBUG_PREFIX) init; reset init;
+ifeq ($(VS_ERASE),1)
+ifeq ($(SS_CONFIG),1)
+# program application, program static section
+_MTB_RECIPE_OPENOCD_PROGRAM=program $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) verify; program $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(SS_BIN_FILE) $(SS_START_LMA) verify reset exit;
+else
+# Read static section, program application and restore static section
+_MTB_RECIPE_OPENOCD_PROGRAM=init; reset init; cmsis_flash init; flash read_bank 0 s.bin $(SS_START_OFFSET) $(SS_SIZE); program $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) verify; program s.bin $(SS_START_LMA) verify reset exit;
+endif
+else
+ifeq ($(SS_CONFIG),1)
+# program application, program static section
+_MTB_RECIPE_OPENOCD_PROGRAM=program $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) verify; program $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(SS_BIN_FILE) $(SS_START_LMA) verify reset exit;
+else
+# program application only
+ifeq ($(ERASE_OPTION),skip)
+_MTB_RECIPE_OPENOCD_PROGRAM=init; reset init; flash write_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); verify_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); reset run; shutdown;
+else ifeq ($(ERASE_OPTION),chip)
+_MTB_RECIPE_JLINK_CMDFILE_ERASE=Erase
+_MTB_RECIPE_OPENOCD_PROGRAM=init; reset init; erase_all; flash write_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); verify_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); reset run; shutdown;
+else
 _MTB_RECIPE_OPENOCD_PROGRAM=program $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) verify reset exit;
+endif
+endif
+endif
 endif
 
 _MTB_RECIPE__OPENOCD_ERASE_ARGS=$(_MTB_RECIPE__OPENOCD_SCRIPTS) $(_MTB_RECIPE__OPENOCD_QSPI) -c \
@@ -77,3 +101,6 @@ _MTB_RECIPE__OPENOCD_PROGRAM_ARGS=$(_MTB_RECIPE__OPENOCD_SCRIPTS) $(_MTB_RECIPE_
 					"$(_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER); $(_MTB_RECIPE__OPENOCD_INTERFACE) $(_MTB_RECIPE__OPENOCD_TARGET) $(_MTB_RECIPE_OPENOCD_CUSTOM_COMMAND) $(_MTB_RECIPE_OPENOCD_PROGRAM)"
 _MTB_RECIPE__OPENOCD_DEBUG_ARGS=$(_MTB_RECIPE__OPENOCD_SCRIPTS) $(_MTB_RECIPE__OPENOCD_QSPI) -c \
 					"$(_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER); $(_MTB_RECIPE__OPENOCD_INTERFACE) $(_MTB_RECIPE__OPENOCD_TARGET) $(_MTB_RECIPE_OPENOCD_CUSTOM_COMMAND) $(_MTB_RECIPE_OPENOCD_DEBUG)"
+
+_MTB_RECIPE__JLINK_DEVICE_CFG_PROGRAM=$(_MTB_RECIPE__JLINK_DEVICE_CFG)
+_MTB_RECIPE__JLINK_DEBUG_ARGS=-if swd -device $(_MTB_RECIPE__JLINK_DEVICE_CFG) -endian little -speed auto -port 2334 -swoport 2335 -telnetport 2336 -vd -ir -localhostonly 1 -singlerun -strict -timeout 0 -nogui

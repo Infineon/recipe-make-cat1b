@@ -91,6 +91,18 @@ fi
 SERVICE_APP_DESCR_ADDR=${11}
 : ${SERVICE_APP_DESCR_ADDR:=0x0}
 
+BOOTSTRAP_SIZE=${12}
+: ${BOOTSTRAP_SIZE:=0x00002400}
+
+DEVICE_SRAM_SIZE_KB=${13}
+: ${DEVICE_SRAM_SIZE_KB:=128}
+
+DEVICE_SRAM_SIZE_KB_HEX=$(printf "0x%x" $DEVICE_SRAM_SIZE_KB)
+
+#converting SRAM size from KB to B.
+DEVICE_SRAM_SIZE=$(printf "0x%x" $(($DEVICE_SRAM_SIZE_KB_HEX * 0x400))) 
+
+
 CYSECURETOOLS=cysecuretools
 
 ######################## Validate Input Args #################################
@@ -177,11 +189,8 @@ L1_APP_DESCR_SIZE=28
 # Placed after the TOC2
 L1_APP_DESCR_ADDR=$(printf "0x%x" `expr $TOC2_SIZE`)
 # default bootstrap address when APP_TYPE is l1ram
-BOOT_STRAP_DST_ADDR_DEFAULT_L1RAM=0x20000800
-# default bootstrap address when APP_TYPE is flash
-BOOT_STRAP_DST_ADDR_DEFAULT_FLASH=0x2001DC00
-# default bootstrap size
-BOOT_STRAP_SIZE_DEFAULT=0x2400
+BOOT_STRAP_DST_ADDR_DEFAULT_L1RAM=0x20004000
+
 # L1_APP_DESCR entries in hexadecimal
 if [ "$LCS" == "NORMAL_NO_SECURE" ]; then
 	BOOT_STRAP_ADDR=0x50 # Fix address for un-signed image
@@ -203,17 +212,10 @@ if [ "$APP_TYPE" == "l1ram" ]; then
 		BOOT_STRAP_DST_ADDR=$BOOT_STRAP_DST_ADDR_DEFAULT_L1RAM
 	fi
 else
-	BOOT_STRAP_SIZE_ELF=`${NM_TOOL} ${L1_USER_APP_ELF} | grep "__bootstrap_size__" | awk '{print $1}'`
-	BOOT_STRAP_SIZE=$(printf "%d" $((16#$BOOT_STRAP_SIZE_ELF)))
-	BOOT_STRAP_DST_ADDR_ELF=`${NM_TOOL} ${L1_USER_APP_ELF} | grep "__bootstrap_start_addr__" | awk '{print $1}'`
-	BOOT_STRAP_DST_ADDR=$(printf "%d" $((16#$BOOT_STRAP_DST_ADDR_ELF)))
-
-	if [ $BOOT_STRAP_DST_ADDR == 0 ]; then
-		BOOT_STRAP_DST_ADDR=$BOOT_STRAP_DST_ADDR_DEFAULT_FLASH
-	fi
-	if [ $BOOT_STRAP_SIZE == 0 ]; then
-		BOOT_STRAP_SIZE=$BOOT_STRAP_SIZE_DEFAULT
-	fi
+	BOOT_STRAP_SIZE=$BOOTSTRAP_SIZE
+	RAM_START_ADDR_SAHB=0x20000000
+	RAM_END_ADDR_SAHB=$(printf "0x%x" $(($RAM_START_ADDR_SAHB + $DEVICE_SRAM_SIZE)))
+	BOOT_STRAP_DST_ADDR=$(printf "0x%x" $(($RAM_END_ADDR_SAHB - $BOOTSTRAP_SIZE)))
 fi
 
 # Convert to hex string (without 0x prefix)

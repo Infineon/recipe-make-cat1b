@@ -7,9 +7,8 @@ echo_run() { echo "\$ ${@/eval/}" ; "$@" ; }
 # 1. toolchain
 # 2. path to app
 # 3. app name
-# 4. python command
-# 5. path to script
-# 6. gcc bin path
+# 4. gcc bin path
+# 5. path of srec_cat
 
 # Combined image configuration
 TOOLCHAIN=$1
@@ -21,17 +20,22 @@ APP_PATH=$2
 APP_NAME=$3
 : ${APP_NAME:=blinky}
 
-PYTHON_COMMAND=$4
-: ${PYTHON_COMMAND:=.}
-
-SCRIPT_PATH=$5
-: ${SCRIPT_PATH:=.}
-
-if [ "$6" == "" ];then
+if [ "$4" == "" ];then
     NM_TOOL=arm-none-eabi-nm
 else
-    NM_TOOL="$6"/arm-none-eabi-nm
+    NM_TOOL="$4"/arm-none-eabi-nm
 fi
+
+SREC_CAT_UTIL=$5
+: ${SREC_CAT_UTIL:=srec_cat}
+
+BOOTSTRAP_SIZE=${6}
+: ${BOOTSTRAP_SIZE:=0x00002400}
+
+FLASH_ALIGNMENT_SIZE=0x00000200
+BOOTSTRAP_OFFSET_FLASH=0x00000050 # toc2=0x10, l1_desc=0x1C, sign_header=0x20 and 16byte aligned.
+APPCODE_OFFSET_FLASH=$(printf "0x%x" $(($BOOTSTRAP_SIZE + $FLASH_ALIGNMENT_SIZE)))
+APP_FLASH_OFFSET=$(printf "0x%x" $(($APPCODE_OFFSET_FLASH - $BOOTSTRAP_OFFSET_FLASH)))
 
 if [ "$TOOLCHAIN" == "IAR" ]; then
 
@@ -46,16 +50,8 @@ if [ "$TOOLCHAIN" == "IAR" ]; then
         echo "ERROR: $APP_ELF not found"
         exit 1
     fi
-    if ! [ -f $SCRIPT_PATH/bin2hex.py ]; then
-        echo "ERROR: $SCRIPT_PATH/bin2hex.py not found"
-        exit 1
-    fi
-    if ! [ -f $SCRIPT_PATH/hexmerge.py ]; then
-        echo "ERROR: $SCRIPT_PATH/hexmerge.py not found"
-        exit 1
-    fi
-    if ! [ -f $SCRIPT_PATH/hex2bin.py ]; then
-        echo "ERROR: $SCRIPT_PATH/hex2bin.py not found"
+    if ! [ -f $SREC_CAT_UTIL ]; then
+        echo "ERROR: $SREC_CAT_UTIL not found"
         exit 1
     fi
     if ! [ -x "$(command -v awk)" ]; then
@@ -63,22 +59,14 @@ if [ "$TOOLCHAIN" == "IAR" ]; then
         exit 1
     fi
     ########################################################################################################
-    BOOTSTRAP_CODE_LMA=`${NM_TOOL} ${APP_ELF} | grep "__bootstrap_code_lma__" | awk '{print $1}'`
     BOOTSTRAP_CODE_VMA=`${NM_TOOL} ${APP_ELF} | grep "__bootstrap_code_vma__" | awk '{print $1}'`
-    APP_CODE_LMA=`${NM_TOOL} ${APP_ELF} | grep "__app_code_lma__" | awk '{print $1}'`
     APP_CODE_VMA=`${NM_TOOL} ${APP_ELF} | grep "__app_code_vma__" | awk '{print $1}'`
-
-    BOOTSTRAP_CODE_LMA_INT=$(printf "%d" $((16#$BOOTSTRAP_CODE_LMA)))
-    APP_CODE_LMA_INT=$(printf "%d" $((16#$APP_CODE_LMA)))
-    APP_FLASH_OFFSET_INT=`expr $APP_CODE_LMA_INT - $BOOTSTRAP_CODE_LMA_INT`
-    APP_FLASH_OFFSET_HEX=$(printf "0x%x" $APP_FLASH_OFFSET_INT) #0x81B8
 
     BOOTSTRAP_CODE_VMA_INT=$(printf "%d" $((16#$BOOTSTRAP_CODE_VMA)))
     APP_CODE_VMA_INT=$(printf "%d" $((16#$APP_CODE_VMA)))
 
     BOOTSTRAP_BIN=$APP_NAME-$(printf "0x%x" $BOOTSTRAP_CODE_VMA_INT)
     APP_BIN=$APP_NAME-$(printf "0x%x" $APP_CODE_VMA_INT)
-    APP_FLASH_OFFSET=$APP_FLASH_OFFSET_HEX
 
     if ! [ -f $APP_PATH/$BOOTSTRAP_BIN.bin ]; then
         echo "ERROR: $APP_PATH/$BOOTSTRAP_BIN.bin not found"
@@ -89,10 +77,10 @@ if [ "$TOOLCHAIN" == "IAR" ]; then
         exit 1
     fi
 
-    $PYTHON_COMMAND $SCRIPT_PATH/bin2hex.py $APP_PATH/$BOOTSTRAP_BIN.bin $APP_PATH/bootstrap.hex;
-    $PYTHON_COMMAND $SCRIPT_PATH/bin2hex.py --offset=$APP_FLASH_OFFSET $APP_PATH/$APP_BIN.bin $APP_PATH/app.hex;
-    $PYTHON_COMMAND $SCRIPT_PATH/hexmerge.py $APP_PATH/bootstrap.hex $APP_PATH/app.hex -o $APP_PATH/$APP_NAME.hex;
-    $PYTHON_COMMAND $SCRIPT_PATH/hex2bin.py $APP_PATH/$APP_NAME.hex $APP_PATH/$APP_NAME.bin;
+    $SREC_CAT_UTIL $APP_PATH/$BOOTSTRAP_BIN.bin -Binary -o $APP_PATH/bootstrap.hex -Intel -Output_Block_Size=16;
+    $SREC_CAT_UTIL $APP_PATH/$APP_BIN.bin -Binary -offset $APP_FLASH_OFFSET -o $APP_PATH/app.hex -Intel -Output_Block_Size=16;
+    $SREC_CAT_UTIL $APP_PATH/bootstrap.hex -Intel $APP_PATH/app.hex -Intel -o $APP_PATH/$APP_NAME.hex -Intel -Output_Block_Size=16;
+    $SREC_CAT_UTIL $APP_PATH/$APP_NAME.hex -Intel -o $APP_PATH/$APP_NAME.bin -Binary;
 
 elif [ "$TOOLCHAIN" == "ARM" ]; then
     APP_EXT=_int
@@ -102,11 +90,11 @@ elif [ "$TOOLCHAIN" == "ARM" ]; then
     #APP_FLASH_OFFSET=$APP_FLASH_OFFSET_HEX
     #APP_FLASH_OFFSET=0x2FB8
 
-    $PYTHON_COMMAND $SCRIPT_PATH/bin2hex.py $APP_PATH/$APP_NAME.bin/bootstrap $APP_PATH/$APP_NAME.bin/bootstrap.hex;
+    $SREC_CAT_UTIL $APP_PATH/$APP_NAME.bin/bootstrap -Binary -o $APP_PATH/$APP_NAME.bin/bootstrap.hex -Intel -Output_Block_Size=16;
     #$SCRIPT_PATH/bin2hex.py --offset=$APP_FLASH_OFFSET $APP_PATH.bin/app $APP_PATH.bin/app.hex;
-    $PYTHON_COMMAND $SCRIPT_PATH/bin2hex.py --offset=0x25B0 $APP_PATH/$APP_NAME.bin/app $APP_PATH/$APP_NAME.bin/app.hex;
-    $PYTHON_COMMAND $SCRIPT_PATH/hexmerge.py $APP_PATH/$APP_NAME.bin/bootstrap.hex $APP_PATH/$APP_NAME.bin/app.hex -o $APP_PATH/$APP_NAME.bin/$APP_NAME.hex;
-    $PYTHON_COMMAND $SCRIPT_PATH/hex2bin.py $APP_PATH/$APP_NAME.bin/$APP_NAME.hex $APP_PATH/$APP_NAME.bin/$APP_NAME.bin;
+    $SREC_CAT_UTIL $APP_PATH/$APP_NAME.bin/app -Binary -offset $APP_FLASH_OFFSET -o $APP_PATH/$APP_NAME.bin/app.hex -Intel -Output_Block_Size=16;
+    $SREC_CAT_UTIL $APP_PATH/$APP_NAME.bin/bootstrap.hex -Intel $APP_PATH/$APP_NAME.bin/app.hex -Intel -o $APP_PATH/$APP_NAME.bin/$APP_NAME.hex -Intel -Output_Block_Size=16;
+    $SREC_CAT_UTIL $APP_PATH/$APP_NAME.bin/$APP_NAME.hex -Intel -o $APP_PATH/$APP_NAME.bin/$APP_NAME.bin -Binary;
     cp $APP_PATH/$APP_NAME.bin/$APP_NAME.bin $APP_PATH/$APP_NAME$APP_EXT.bin;
     rm -rf $APP_PATH/$APP_NAME.bin;
     mv $APP_PATH/$APP_NAME$APP_EXT.bin $APP_PATH/$APP_NAME.bin;
