@@ -161,9 +161,18 @@ endif
 endif
 
 ifeq ($(MTB_RECIPE__CORE),CM33)
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_DSP_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+_MTB_TOOLCHAIN_IAR__DSP_FLAG_SUFFIX=.no_dsp
+else
+_MTB_TOOLCHAIN_IAR__DSP_FLAG_SUFFIX=
+endif
 # Arm Cortex-M33 CPU
-_MTB_TOOLCHAIN_IAR__FLAGS_CORE:=--cpu Cortex-M33.no_dsp 
-
+_MTB_TOOLCHAIN_IAR__FLAGS_CORE:=--cpu Cortex-M33$(_MTB_TOOLCHAIN_IAR__DSP_FLAG_SUFFIX)
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+# Software FP
+_MTB_TOOLCHAIN_IAR__VFP_FLAGS:=
+_MTB_TOOLCHAIN_IAR__VFP_CFLAGS:=
+else
 ifeq ($(VFP_SELECT),hardfp)
 # FPv5 FPU, hardfp, single-precision
 _MTB_TOOLCHAIN_IAR__VFP_FLAGS:=--fpu FPv5-SP
@@ -177,10 +186,16 @@ _MTB_TOOLCHAIN_IAR__VFP_FLAGS:=--fpu FPv5-SP
 _MTB_TOOLCHAIN_IAR__VFP_CFLAGS:=$(_MTB_TOOLCHAIN_IAR__VFP_FLAGS) --aapcs std
 endif
 endif
+endif
 
 ifeq ($(MTB_RECIPE__CORE),CM55)
-# Arm Cortex-M55 CPU
+# Arm Cortex-M55 CPU with integer, half-, and single-precision floating-point MVE
 _MTB_TOOLCHAIN_IAR__FLAGS_CORE:=--cpu Cortex-M55
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+# Software FP
+_MTB_TOOLCHAIN_IAR__VFP_FLAGS:=
+_MTB_TOOLCHAIN_IAR__VFP_CFLAGS:=
+else
 ifeq ($(VFP_SELECT),hardfp)
 ifeq ($(VFP_SELECT_PRECISION),singlefp)
 # FPv5 FPU, hardfp, single-precision
@@ -203,6 +218,7 @@ else
 _MTB_TOOLCHAIN_IAR__VFP_FLAGS:=--fpu FPv5_D16
 endif
 _MTB_TOOLCHAIN_IAR__VFP_CFLAGS:=$(_MTB_TOOLCHAIN_IAR__VFP_FLAGS) --aapcs std
+endif
 endif
 endif
 

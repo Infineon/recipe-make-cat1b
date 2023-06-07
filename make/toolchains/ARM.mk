@@ -157,26 +157,87 @@ endif
 endif
 
 ifeq ($(MTB_RECIPE__CORE),CM33)
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_DSP_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+_MTB_TOOLCHAIN_ARM__DSP_CFLAG_SUFFIX=+nodsp
+_MTB_TOOLCHAIN_ARM__DSP_FLAG_SUFFIX=.no_dsp
+else
+_MTB_TOOLCHAIN_ARM__DSP_CFLAG_SUFFIX=
+_MTB_TOOLCHAIN_ARM__DSP_FLAG_SUFFIX=
+endif
 # Arm Cortex-M33 CPU
-_MTB_TOOLCHAIN_ARM__CFLAGS_CORE:=-mcpu=cortex-m33+nodsp
-_MTB_TOOLCHAIN_ARM__FLAGS_CORE:=--cpu=Cortex-M33.no_dsp
-ifeq ($(VFP_SELECT),hardfp)
-_MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=hard -mfpu=fpv5-sp-d16
-_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv5-SP
-# See make help for VFP_SELECT
-else ifeq ($(VFP_SELECT),softfloat)
+_MTB_TOOLCHAIN_ARM__CFLAGS_CORE:=-mcpu=cortex-m33$(_MTB_TOOLCHAIN_ARM__DSP_CFLAG_SUFFIX)
+_MTB_TOOLCHAIN_ARM__FLAGS_CORE:=--cpu=Cortex-M33$(_MTB_TOOLCHAIN_ARM__DSP_FLAG_SUFFIX)
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+# Software FP
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
 else
+ifeq ($(VFP_SELECT),hardfp)
+# FPv5 FPU, hardfp, single-precision only
+_MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=hard -mfpu=fpv5-sp-d16
+_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv5-SP
+else ifeq ($(VFP_SELECT),softfloat)
+# Software FP
+_MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
+_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
+else
+# FPv5 FPU, softfp, single-precision only
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=softfp -mfpu=fpv5-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5-SP
 endif
 endif
+endif
 
 ifeq ($(MTB_RECIPE__CORE),CM55)
-# Arm Cortex-M55 CPU
-_MTB_TOOLCHAIN_ARM__CFLAGS_CORE:=-mcpu=cortex-m55
-_MTB_TOOLCHAIN_ARM__FLAGS_CORE:=--cpu=Cortex-M55
+# Check if MVE is supported
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_MVE_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+ifneq ($(MVE_SELECT),NO_MVE)
+$(call mtb__error, "MVE_SELECT=$(MVE_SELECT)" but "$(MTB_RECIPE__CORE)" core does not support MVE. Set "MVE_SELECT=NO_MVE" to disable MVE support for "$(MTB_RECIPE__CORE)" core.)
+endif
+endif
+ifeq ($(MVE_SELECT),NO_MVE)
+# Disable MVE
+_MTB_TOOLCHAIN_ARM__MVE_CFLAGS=+nomve
+_MTB_TOOLCHAIN_ARM__MVE_FLAGS=.no_mve
+else ifeq ($(MVE_SELECT),MVE-I)
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+# Force switch to softfloat mode if FPU is not available
+_MTB_TOOLCHAIN_ARM__MVE_CFLAGS=+nofp
+_MTB_TOOLCHAIN_ARM__MVE_FLAGS=.no_fp
+else
+ifeq ($(VFP_SELECT),softfloat)
+# Enable MVE-I and disable FPU
+_MTB_TOOLCHAIN_ARM__MVE_CFLAGS=+nofp
+_MTB_TOOLCHAIN_ARM__MVE_FLAGS=.no_fp
+else
+# Integer precision MVE
+_MTB_TOOLCHAIN_ARM__MVE_CFLAGS=+nomve.fp
+_MTB_TOOLCHAIN_ARM__MVE_FLAGS=.no_mvefp
+endif
+endif
+else
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+$(info INFO: MVE_SELECT=MVE-F is set but FPU is not available on $(MTB_RECIPE__CORE) core. Valid options for $(MTB_RECIPE__CORE) core are MVE_SELECT=MVE-I or MVE_SELECT=NO_MVE.)
+else ifeq ($(VFP_SELECT),softfloat)
+$(info INFO: MVE_SELECT=MVE-F is set but VFP_SELECT=softfloat. Set VFP_SELECT=softfp or VFP_SELECT=hardfp to enable MVE-F support.)
+endif
+# Integer, half-, and single-precision floating-point MVE
+_MTB_TOOLCHAIN_ARM__MVE_CFLAGS=
+_MTB_TOOLCHAIN_ARM__MVE_FLAGS=
+endif
+# Arm Cortex-M55 CPU + extensions
+_MTB_TOOLCHAIN_ARM__CFLAGS_CORE:=-mcpu=cortex-m55$(_MTB_TOOLCHAIN_ARM__MVE_CFLAGS)
+_MTB_TOOLCHAIN_ARM__FLAGS_CORE:=--cpu=Cortex-M55$(_MTB_TOOLCHAIN_ARM__MVE_FLAGS)
+ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+# Software FP
+ifeq ($(MVE_SELECT),MVE-I)
+_MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=
+_MTB_TOOLCHAIN_ARM__VFP_FLAGS=
+else
+_MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
+_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
+endif
+else
 ifeq ($(VFP_SELECT),hardfp)
 ifeq ($(VFP_SELECT_PRECISION),singlefp)
 # FPv5 FPU, hardfp, single-precision
@@ -189,8 +250,13 @@ _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv5_D16
 endif
 else ifeq ($(VFP_SELECT),softfloat)
 # Software FP
+ifeq ($(MVE_SELECT),MVE-I)
+_MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=
+_MTB_TOOLCHAIN_ARM__VFP_FLAGS=
+else
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
+endif
 else
 ifeq ($(VFP_SELECT_PRECISION),singlefp)
 # FPv5 FPU, softfp, single-precision
@@ -200,6 +266,7 @@ else
 # FPv5 FPU, softfp, double-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=softfp -mfpu=fpv5-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5_D16
+endif
 endif
 endif
 endif
