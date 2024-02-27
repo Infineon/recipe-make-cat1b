@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2023 Cypress Semiconductor Corporation
+# Copyright 2018-2024 Cypress Semiconductor Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,12 +29,16 @@ endif
 
 include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/recipe_common.mk
 
+include $(MTB_TOOLS__RECIPE_DIR)/make/toolchains/$(TOOLCHAIN)_cmse.mk
+
+ifeq (CYW20829,$(_MTB_RECIPE__DEVICE_DIE))
+
 # override the memcalc command to run its own flash calc script that prints external flash usage rather than internal.
 # this must occur after including recipe_common.mk
 ifneq ($(TOOLCHAIN),A_Clang)
 _MTB_RECIPE__MEM_CALC=\
 	bash --norc --noprofile\
-	$(MTB_TOOLS__RECIPE_DIR)/make/scripts/memcalc.bash\
+	$(MTB_TOOLS__RECIPE_DIR)/make/scripts/20829/memcalc.bash\
 	$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).readelf\
 	$(CY_MEMORY_EXTERNAL_FLASH)\
 	$(CY_START_EXTERNAL_FLASH)
@@ -58,7 +62,6 @@ else
 	$(error Missing BSP provision transition files.)
 endif
 
-ifeq (CYW20829,$(_MTB_RECIPE__DEVICE_DIE))
 
 ifeq ($(APPTYPE),flash)
 MTB_RECIPE__DEFINES+=-DFLASH_BOOT -DCY_PDL_FLASH_BOOT

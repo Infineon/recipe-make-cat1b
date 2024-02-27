@@ -54,8 +54,11 @@
                 "-enable-pretty-printing",
                 "set remotetimeout 15",
                 "monitor reset init",
+                "monitor cmsis_flash init; &&_MTB_RECIPE__READ_STATIC_SECT&&",//backup SS//
                 // Comment this next line out if you don't want to reload program
                 "monitor program {&&_MTB_RECIPE__FINAL_HEX_FILE&&}",
+                "monitor &&_MTB_RECIPE__VSCODE_PROGRAM_STATIC_SECT_CMD&&",//prebuild SS//
+                "monitor &&_MTB_RECIPE__RESTORE_STATIC_SECT&&",//restore SS//
                 "monitor reset init"
             ],
             "overrideRestartCommands": [
@@ -149,7 +152,10 @@
             ],
             "overrideLaunchCommands": [
                 "set remotetimeout 15",
+                "monitor init; reset init; cmsis_flash init; &&_MTB_RECIPE__READ_STATIC_SECT&&",//backup SS//
                 "monitor program {&&_MTB_RECIPE__FINAL_HEX_FILE&&}",
+                "monitor &&_MTB_RECIPE__VSCODE_PROGRAM_STATIC_SECT_CMD&&",//prebuild SS//
+                "monitor &&_MTB_RECIPE__RESTORE_STATIC_SECT&&",//restore SS//
                 "monitor poll off",
                 "monitor targets cyw20829.sysap",
                 "monitor mxs40v2::toggle_xres",

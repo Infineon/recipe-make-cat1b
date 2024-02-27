@@ -6,7 +6,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2022-2023 Cypress Semiconductor Corporation
+# Copyright 2022-2024 Cypress Semiconductor Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,26 +54,31 @@ endif
 ##############################################
 _MTB_RECIPE__IDE_TEXT_DATA_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/recipe_ide_text_data.txt
 _MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE:=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/recipe_ide_template_meta_data.txt
+_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE:=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/recipe_vscode_template_regex_data.txt
 _MTB_RECIPE__IDE_TEMPLATE_DIR:=$(MTB_TOOLS__RECIPE_DIR)/make/scripts/interface_version_2
 
 ifeq (ram,$(APPTYPE))
 _MTB_RECIPE__IDE_TEMPLATE_SUBDIR:=ram
 else
-_MTB_RECIPE__IDE_TEMPLATE_SUBDIR:=flash
+_MTB_RECIPE__IDE_TEMPLATE_SUBDIR:=flash/20829
+endif
+
+# Set the output file paths
+ifneq ($(CY_BUILD_LOCATION),)
+_MTB_RECIPE__ECLIPSE_PROG_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME)$(_MTB_RECIPE__PROG_FILE_SUFFIX).$(MTB_RECIPE__SUFFIX_PROGRAM)
+_MTB_RECIPE__ECLIPSE_STATIC_SECTION=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(SS_BIN_FILE)
+_MTB_RECIPE__VSCODE_STATIC_SECTION=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(SS_BIN_FILE)
+_MTB_RECIPE__VSCODE_FINAL_HEX_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME)$(_MTB_RECIPE__PROG_FILE_SUFFIX).$(MTB_RECIPE__SUFFIX_PROGRAM)
+else
+_MTB_RECIPE__ECLIPSE_PROG_FILE=$${cy_prj_path}/$(_MTB_RECIPE__IDE_BUILD_PATH_RELATIVE)/$(APPNAME)$(_MTB_RECIPE__PROG_FILE_SUFFIX).$(MTB_RECIPE__SUFFIX_PROGRAM)
+_MTB_RECIPE__ECLIPSE_STATIC_SECTION=$${cy_prj_path}/$(_MTB_RECIPE__IDE_BUILD_PATH_RELATIVE)/$(SS_BIN_FILE)
+_MTB_RECIPE__VSCODE_STATIC_SECTION=./$(_MTB_RECIPE__IDE_BUILD_PATH_RELATIVE)/$(SS_BIN_FILE)
+_MTB_RECIPE__VSCODE_FINAL_HEX_FILE=./$(_MTB_RECIPE__IDE_BUILD_PATH_RELATIVE)/$(APPNAME)$(_MTB_RECIPE__PROG_FILE_SUFFIX).$(MTB_RECIPE__SUFFIX_PROGRAM)
 endif
 
 ##############################################
 # Eclipse
 ##############################################
-
-# Set the output file paths
-ifneq (ram,$(APPTYPE))
-ifneq ($(CY_BUILD_LOCATION),)
-_MTB_RECIPE__ECLIPSE_PROG_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex
-else
-_MTB_RECIPE__ECLIPSE_PROG_FILE=$${cy_prj_path}/$(notdir $(MTB_TOOLS__OUTPUT_BASE_DIR))/$(TARGET)/$(CONFIG)/$(APPNAME).final.hex
-endif
-endif
 
 eclipse_generate: recipe_eclipse_text_replacement_data_file recipe_eclipse_meta_replacement_data_file
 eclipse_generate: MTB_CORE__EXPORT_CMDLINE += -textdata $(_MTB_RECIPE__IDE_TEXT_DATA_FILE)  -metadata $(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE)
@@ -89,21 +94,19 @@ recipe_eclipse_text_replacement_data_file:
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__QSPI_CFG_PATH&&=$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_WITH_FLAG))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER&&=$(_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER_WITH_FLAG))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__DBG_CERTIFICATE_PATH&&=$(CY_DBG_CERTIFICATE_PATH))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__ECLIPSE_LAUNCH_APP_COMMANDS&&=$(_MTB_RECIPE__ECLIPSE_LAUNCH_APP_COMMANDS))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__PREBUILT_SECURE_APP&&=$(_MTB_RECIPE__PREBUILT_SECURE_APP))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__ECLIPSE_POST_CONNECT_COMMANDS&&=$(_MTB_RECIPE__ECLIPSE_POST_CONNECT_COMMANDS))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__ECLIPSE_OTHER_RUN_COMMANDS&&=$(_MTB_RECIPE__ECLIPSE_OTHER_RUN_COMMANDS))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__ECLIPSE_PROGRAM_CONFIG_CMD&&=$(_MTB_RECIPE__ECLIPSE_PROGRAM_CONFIG_CMD))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__ECLIPSE_JLINK_OTHER_RUN_COMMANDS&&=$(_MTB_RECIPE__ECLIPSE_JLINK_OTHER_RUN_COMMANDS))
 
 ##############################################
 # VSCode
 ##############################################
 
-ifneq (ram,$(APPTYPE))
-ifneq ($(CY_BUILD_LOCATION),)
-_MTB_RECIPE__VSCODE_FINAL_HEX_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex
-else
-_MTB_RECIPE__VSCODE_FINAL_HEX_FILE=./$(notdir $(MTB_TOOLS__OUTPUT_BASE_DIR))/$(TARGET)/$(CONFIG)/$(APPNAME).final.hex
-endif
-endif
-
-vscode_generate: recipe_vscode_text_replacement_data_file recipe_vscode_meta_replacement_data_file
-vscode_generate: MTB_CORE__EXPORT_CMDLINE += -textdata $(_MTB_RECIPE__IDE_TEXT_DATA_FILE)  -metadata $(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE)
+vscode_generate: recipe_vscode_text_replacement_data_file recipe_vscode_meta_replacement_data_file recipe_vscode_regex_replacement_data_file
+vscode_generate: MTB_CORE__EXPORT_CMDLINE += -textdata $(_MTB_RECIPE__IDE_TEXT_DATA_FILE)  -metadata $(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE) -textregexdata $(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE)
 
 recipe_vscode_text_replacement_data_file:
 	$(call mtb__file_write,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__FINAL_HEX_FILE&&=$(_MTB_RECIPE__VSCODE_FINAL_HEX_FILE))
@@ -113,7 +116,40 @@ recipe_vscode_text_replacement_data_file:
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__QSPI_CFG_PATH&&=$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER&&=$(_MTB_RECIPE__OPENOCD_QSPI_FLASHLOADER))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__DBG_CERTIFICATE_PATH&&=$(CY_DBG_CERTIFICATE_PATH))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__FAMILY_NAME&&=$(_MTB_RECIPE__DEVICE_DIE))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__PREBUILT_SECURE_APP&&=$(_MTB_RECIPE__PREBUILT_SECURE_APP))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__READ_STATIC_SECT&&=$(_MTB_RECIPE__READ_STATIC_SECT))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__VSCODE_PROGRAM_STATIC_SECT_CMD&&=$(_MTB_RECIPE__VSCODE_PROGRAM_STATIC_SECT_CMD))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__RESTORE_STATIC_SECT&&=$(_MTB_RECIPE__RESTORE_STATIC_SECT))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__VSCODE_JLINK_PROGRAM_STATIC_SECT&&=restore $(_MTB_RECIPE__VSCODE_STATIC_SECTION) binary $(SS_START_LMA))
 
+recipe_vscode_regex_replacement_data_file:
+	$(call mtb__file_write,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^(.*)//20829 Only//(.*)$$=\1\2)
+ifeq ($(VS_ERASE),1)
+ifeq ($(SS_CONFIG),1)
+# program application, program static section
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^(.*)//prebuild SS//(.*)$$=\1\2)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//backup SS//.*$$=)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//restore SS//.*$$=)
+else
+# Read static section, program application and restore static section
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^(.*)//backup SS//(.*)$$=\1\2)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//prebuild SS//.*$$=)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^(.*)//restore SS//(.*)$$=\1\2)
+endif #($(SS_CONFIG),1)
+else #($(VS_ERASE),1)
+ifeq ($(SS_CONFIG),1)
+# program application, program static section
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^(.*)//prebuild SS//(.*)$$=\1\2)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//backup SS//.*$$=)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//restore SS//.*$$=)
+else
+# program application only
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//backup SS//.*$$=)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//prebuild SS//.*$$=)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//restore SS//.*$$=)
+endif
+endif
 
 recipe_vscode_meta_replacement_data_file:
 	$(call mtb__file_write,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/vscode/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/launch.json=.vscode/launch.json)
@@ -122,7 +158,7 @@ ifeq ($(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR),KitProg3)
 endif
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(MTB_TOOLS__CORE_DIR)/make/scripts/interface_version_2/vscode/tasks.json=.vscode/tasks.json)
 
-.PHONY: recipe_vscode_text_replacement_data_file recipe_vscode_meta_replacement_data_file
+.PHONY: recipe_vscode_text_replacement_data_file recipe_vscode_meta_replacement_data_file recipe_vscode_regex_replacement_data_file
 
 ##############################################
 # EW UV
