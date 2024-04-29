@@ -128,3 +128,56 @@ endif #(CYW20829,$(_MTB_RECIPE__DEVICE_DIE))
 
 recipe_postbuild:
 	$(_MTB_RECIPE__MXSV2_POSTBUILD)
+
+################################################################################
+# Programmer tool
+################################################################################
+
+CY_PROGTOOL_FW_LOADER=$(CY_TOOL_fw-loader_EXE_ABS)
+progtool:
+	$(MTB__NOISE)echo;\
+	echo ==============================================================================;\
+	echo "Available commands";\
+	echo ==============================================================================;\
+	echo;\
+	"$(CY_PROGTOOL_FW_LOADER)" --help | sed s/'	'/' '/g;\
+	echo ==============================================================================;\
+	echo "Connected device(s)";\
+	echo ==============================================================================;\
+	echo;\
+	deviceList=$$("$(CY_PROGTOOL_FW_LOADER)" --device-list | grep "FW Version" | sed s/'	'/' '/g);\
+	if [[ ! -n "$$deviceList" ]]; then\
+		echo "ERROR: Could not find any connected devices";\
+		echo;\
+		exit 1;\
+	else\
+		echo "$$deviceList";\
+		echo;\
+	fi;\
+	echo ==============================================================================;\
+	echo "Input command";\
+	echo ==============================================================================;\
+	echo;\
+	echo " Specify the command (and optionally the device name).";\
+	echo " E.g. --mode kp3-daplink KitProg3 CMSIS-DAP HID-0123456789ABCDEF";\
+	echo;\
+	read -p " > " -a params;\
+	echo;\
+	echo ==============================================================================;\
+	echo "Run command";\
+	echo ==============================================================================;\
+	echo;\
+	paramsSize=$${#params[@]};\
+	if [[ $$paramsSize > 2 ]]; then\
+		if [[ $${params[1]} == "kp3-"* ]]; then\
+			deviceName="$${params[@]:2:$$paramsSize}";\
+			"$(CY_PROGTOOL_FW_LOADER)" $${params[0]} $${params[1]} "$$deviceName" | sed s/'	'/' '/g;\
+		else\
+			deviceName="$${params[@]:1:$$paramsSize}";\
+			"$(CY_PROGTOOL_FW_LOADER)" $${params[0]} "$$deviceName" | sed s/'	'/' '/g;\
+		fi;\
+	else\
+		"$(CY_PROGTOOL_FW_LOADER)" "$${params[@]}" | sed s/'	'/' '/g;\
+	fi;
+
+.PHONY: progtool

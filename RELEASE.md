@@ -15,6 +15,9 @@ This release of the 20829 GNU make build recipe includes complete support for bu
     * ARM Compiler 6
 
 ### What Changed?
+#### v2.3.1
+* Minor bug fixes.
+
 #### v2.3.0
 * Updated programming flow to support loading of additional images required for some code examples.
 
