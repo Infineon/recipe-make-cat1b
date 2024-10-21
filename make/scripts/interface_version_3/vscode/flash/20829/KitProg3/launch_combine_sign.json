@@ -1,0 +1,41 @@
+        {
+            "name": "&&MTB_COMBINE_SIGN_&&IDX&&_CONFIG_NAME&& Launch CYW20829 CM33 (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "&&_MTB_RECIPE__ELF_FILE&&",
+            "servertype": "openocd",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/",
+                "&&_MTB_RECIPE__QSPI_CFG_PATH&&"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+                "set DEBUG_CERTIFICATE &&_MTB_RECIPE__DBG_CERTIFICATE_PATH&&"
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "overrideLaunchCommands": [
+                "set mem inaccessible-by-default off",
+                "-enable-pretty-printing",
+                "set remotetimeout 15",
+                "monitor reset init",
+                "monitor cmsis_flash init; &&_MTB_RECIPE__READ_STATIC_SECT&&",//backup SS//
+                // Comment this next line out if you don't want to reload program
+                "monitor program {&&MTB_COMBINE_SIGN_&&IDX&&_VSCODE_HEX_PATH&&}",
+                "monitor &&_MTB_RECIPE__VSCODE_PROGRAM_STATIC_SECT_CMD&&",//prebuild SS//
+                "monitor &&_MTB_RECIPE__RESTORE_STATIC_SECT&&",//restore SS//
+                "monitor reset init"
+            ],
+            "overrideRestartCommands": [
+                "starti"
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
+            "preLaunchTask": "Build Application",    // Set this to run a task from tasks.json
+                                                        // before starting a debug session
+            "showDevDebugOutput": "none"
+        }

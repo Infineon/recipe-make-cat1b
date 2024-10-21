@@ -1,6 +1,6 @@
 Connect
 exec EnableEraseAllFlashBanks
-LoadFile &&PROG_FILE&& reset
+LoadFile &&PROG_FILE&& 0 reset
 &&SECOND_PROG_FILE&&
 Reset
 Go

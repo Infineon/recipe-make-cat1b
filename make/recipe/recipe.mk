@@ -29,7 +29,7 @@ endif
 
 include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/recipe_common.mk
 
-include $(MTB_TOOLS__RECIPE_DIR)/make/toolchains/$(TOOLCHAIN)_cmse.mk
+include $(MTB_TOOLS__RECIPE_DIR)/make/toolchains/arm_v8/$(TOOLCHAIN)_cmse.mk
 
 ifeq (CYW20829,$(_MTB_RECIPE__DEVICE_DIE))
 
@@ -57,7 +57,7 @@ RECIPE_TRANSITION_NORMAL_NON_SECURE=$(CY_TOOL_openocd_EXE_ABS) -s $(CY_TOOL_open
 RECIPE_DEVICE_TRANSITION_TARGET=recipe_device_transition
 $(RECIPE_DEVICE_TRANSITION_TARGET):
 ifneq (,$(CY_BSP_PROVISION_NORMAL_NON_SECURE_BINARIES))
-	$(if $(findstring normal-non-secure,$(findstring $(DEVICE_MODE),normal-non-secure)),$(RECIPE_TRANSITION_NORMAL_NON_SECURE),$(error The only supported DEVICE_MODE for $(DEVICE) is 'normal-non-secure'))
+	$(if $(findstring normal-non-secure,$(findstring $(DEVICE_LIFE_CYCLE_STATE),normal-non-secure)),$(RECIPE_TRANSITION_NORMAL_NON_SECURE),$(error The only supported DEVICE_LIFE_CYCLE_STATE (replaces DEVICE_MODE) for $(DEVICE) is 'normal-non-secure'))
 else
 	$(error Missing BSP provision transition files.)
 endif
@@ -116,17 +116,58 @@ endif
 APP_SLOT_SIZE?= 0x20000
 APP_ENCRYPTION?= 0
 
-_MTB_RECIPE__MXSV2_POSTBUILD+=$(MTB_TOOLS__BASH_CMD) $(MTB_TOOLS__RECIPE_DIR)/make/scripts/20829/run_toc2_generator.sh "$(APP_SECURITY_TYPE)" "$(MTB_TOOLS__OUTPUT_CONFIG_DIR)" "$(APPNAME)" "$(APPTYPE)" "$(MTB_TOOLS__TARGET_DIR)" "NONE" "$(MTB_TOOLCHAIN_GCC_ARM__BASE_DIR)" "" $(APP_SLOT_SIZE) $(APP_ENCRYPTION) "" "$(BOOTSTRAP_SIZE)" "$(DEVICE_$(MPN_LIST)_SRAM_KB)";
+_MTB_RECIPE__MXSV2_POSTBUILD+=$(MTB_TOOLS__BASH_CMD) $(MTB_TOOLS__RECIPE_DIR)/make/scripts/20829/run_toc2_generator.sh "$(sort $(filter SECURE NON_SECURE,$(VCORE_ATTRS)))" "$(MTB_TOOLS__OUTPUT_CONFIG_DIR)" "$(APPNAME)" "$(APPTYPE)" "$(MTB_TOOLS__TARGET_DIR)" "NONE" "$(MTB_TOOLCHAIN_GCC_ARM__BASE_DIR)" "" $(APP_SLOT_SIZE) $(APP_ENCRYPTION) "" "$(BOOTSTRAP_SIZE)" "$(DEVICE_$(MPN_LIST)_SRAM_KB)";
 _MTB_RECIPE__MXSV2_POSTBUILD+=$(_MTB_RECIPE_20829_SREC_CAT_UTIL) $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.bin -Binary -offset 0x60000000 -o $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex -Intel -Output_Block_Size=16;
-_MTB_RECIPE__MXSV2_POSTBUILD+=rm -rf $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin;
+_MTB_RECIPE__MXSV2_POSTBUILD+=rm -rf $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin;cp -f $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex $(MTB_RECIPE__LAST_CONFIG_DIR)/$(APPNAME).final.hex
 endif #($(_MTB_RECIPE_20829_SREC_CAT_UTIL),)
 
 endif
 endif # apptype l1ram flash
 
+################################################################################
+# cat1b CYW20289 specific help
+################################################################################
+CY_HELP_DEVICE_MODE=Deprecated as of recipe-make-cat1b 2.5.0, replaced by "DEVICE_LIFE_CYCLE_STATE".
+CY_HELP_DEVICE_MODE_VERBOSE=
+CY_HELP_DEVICE_LIFE_CYCLE_STATE=Specifies device lifecycle state for provisioning
+CY_HELP_DEVICE_LIFE_CYCLE_STATE_VERBOSE=Device transitioning process initiated by device_transition make target \
+					uses the DEVICE_LIFE_CYCLE_STATE variable to set device lifecycle state. \
+					The only supported value is 'normal-non-secure'.\
+					$(MTB__NEWLINE)$(MTB__NEWLINE)Example Usage: make device_transition DEVICE_LIFE_CYCLE_STATE=normal-non-secure
+CY_HELP_APP_SECURITY_TYPE=Specifies device lifecycle state for build process. Deprecated as of recipe-make-cat1b 2.5.0, replaced by "VCORE_ATTRS".
+CY_HELP_APP_SECURITY_TYPE_VERBOSE=Post-build script uses this variable to create a secure or non-secure application image. \
+					Supported values are: NORMAL_NO_SECURE (default), SECURE.
+CY_HELP_APP_SLOT_SIZE=Specifies value for --slot-size parameter of cysecuretools. Default value is 0x20000.
+CY_HELP_APP_ENCRYPTION=Enables encryption when set to 1; disables encryption for any other value. Disabled by default.
+CY_HELP_BOOTSTRAP_SIZE=Specifies bootstrap size for flash linker script
+CY_HELP_BOOTSTRAP_SIZE_VERBOSE=Default values of bootstrap size are: for ARM and GCC_ARM toolchains - 0x00002400, \
+					for IAR toolchain - 0x00003A00.
+
+ifeq ($(CY_HELP),)
+make-recipe-cat1b-help:
+	$(info )
+	$(info ==============================================================================)
+	$(info $(MTB__SPACE)CYW20829 Postbuild make variables)
+	$(info ==============================================================================)
+	$(info $(MTB__SPACE)APP_SECURITY_TYPE  $(CY_HELP_APP_SECURITY_TYPE))
+	$(info $(MTB__SPACE)APP_SLOT_SIZE      $(CY_HELP_APP_SLOT_SIZE))
+	$(info $(MTB__SPACE)APP_ENCRYPTION     $(CY_HELP_APP_ENCRYPTION))
+	$(info $(MTB__SPACE)BOOTSTRAP_SIZE     $(CY_HELP_BOOTSTRAP_SIZE))
+	$(info )
+	$(info ==============================================================================)
+	$(info $(MTB__SPACE)CYW20829 Provisioning make variables)
+	$(info ==============================================================================)
+	$(info $(MTB__SPACE)DEVICE_MODE                 $(CY_HELP_DEVICE_MODE))
+	$(info $(MTB__SPACE)DEVICE_LIFE_CYCLE_STATE     $(CY_HELP_DEVICE_LIFE_CYCLE_STATE))
+	$(info )
+
+help: make-recipe-cat1b-help
+endif #($(CY_HELP),)
 endif #(CYW20829,$(_MTB_RECIPE__DEVICE_DIE))
 
-recipe_postbuild:
+recipe_postbuild: $(MTB_RECIPE__LAST_CONFIG_DIR) $(MTB_RECIPE__LAST_CONFIG_DIR)/$(APPNAME).final.hex
+
+$(MTB_RECIPE__LAST_CONFIG_DIR)/$(APPNAME).final.hex: $(_MTB_RECIPE__PROG_FILE) | $(MTB_RECIPE__LAST_CONFIG_DIR)
 	$(_MTB_RECIPE__MXSV2_POSTBUILD)
 
 ################################################################################
@@ -180,4 +221,4 @@ progtool:
 		"$(CY_PROGTOOL_FW_LOADER)" "$${params[@]}" | sed s/'	'/' '/g;\
 	fi;
 
-.PHONY: progtool
+.PHONY: progtool recipe_mxsv2_postbuild

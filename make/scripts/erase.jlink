@@ -1,3 +1,4 @@
 exec EnableEraseAllFlashBanks
 Erase
+Reset
 Exit

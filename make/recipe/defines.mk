@@ -2,7 +2,7 @@
 # \file defines.mk
 #
 # \brief
-# Defines, needed for the Player build recipe.
+# Defines, needed for the AIROC(TM) CYW20829 build recipe.
 #
 ################################################################################
 # \copyright
@@ -37,11 +37,19 @@ _MTB_RECIPE__PROGRAM_INTERFACE_SUPPORTED:=KitProg3 JLink
 # Compactibility interface for this recipe make
 #
 MTB_RECIPE__INTERFACE_VERSION:=2
+MTB_RECIPE__EXPORT_INTERFACES:=1 2 3
 
 #
 # List the supported toolchains
 #
-CY_SUPPORTED_TOOLCHAINS=GCC_ARM IAR ARM A_Clang
+ifdef CY_SUPPORTED_TOOLCHAINS
+MTB_SUPPORTED_TOOLCHAINS?=$(CY_SUPPORTED_TOOLCHAINS)
+else
+MTB_SUPPORTED_TOOLCHAINS?=GCC_ARM IAR ARM A_Clang LLVM_ARM
+endif
+
+# For BWC with Makefiles that do anything with CY_SUPPORTED_TOOLCHAINS
+CY_SUPPORTED_TOOLCHAINS:=$(MTB_SUPPORTED_TOOLCHAINS)
 
 # only has external memory
 _MTB_RECIPE__START_FLASH=0
@@ -97,3 +105,19 @@ _MTB_RECIPE__ECLIPSE_LAUNCH_APP_COMMANDS=set $$pc = &amp;$(PC_SYMBOL)$(_MTB_RECI
 # This is not the amount that is available on the board
 #
 CY_MEMORY_EXTERNAL_FLASH=0x08000000
+
+# Map APP_SECURITY_TYPE to VCORE_ATTRS for BWC when VCORE_ATTRS has no SECURE or NON_SECURE values set. 
+ifeq ($(filter SECURE NON_SECURE,$(VCORE_ATTRS)),)
+ifeq ($(APP_SECURITY_TYPE),SECURE)
+VCORE_ATTRS+=SECURE
+else ifeq ($(APP_SECURITY_TYPE),NORMAL_NO_SECURE)
+VCORE_ATTRS+=NON_SECURE
+endif # ($(APP_SECURITY_TYPE),SECURE)
+endif # ($(filter SECURE NON_SECURE,$(VCORE_ATTRS)),)
+
+# DEVICE_MODE BWC
+ifeq ($(DEVICE_LIFE_CYCLE_STATE),)
+ifneq ($(DEVICE_MODE),)
+DEVICE_LIFE_CYCLE_STATE=$(DEVICE_MODE)
+endif # ($(DEVICE_MODE),)
+endif # ($(DEVICE_LIFE_CYCLE_STATE),)

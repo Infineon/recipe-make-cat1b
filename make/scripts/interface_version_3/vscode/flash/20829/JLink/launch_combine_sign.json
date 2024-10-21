@@ -1,0 +1,34 @@
+        {
+            "name": "&&MTB_COMBINE_SIGN_&&IDX&&_CONFIG_NAME&& Launch CYW20829 CM33 (JLink)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "&&_MTB_RECIPE__ELF_FILE&&",
+            "servertype": "jlink",
+            "device": "&&_MTB_RECIPE__JLINK_CFG&&",
+            "interface": "&&_MTB_RECIPE__PROBE_INTERFACE&&",
+            "serialNumber": "&&_MTB_RECIPE__PROBE_SERIAL&&",
+            "preLaunchCommands": [
+                // Program via the hex file to get complete coverage
+                "exec-file &&MTB_COMBINE_SIGN_&&IDX&&_VSCODE_HEX_PATH&&"
+            ],
+            "overrideRestartCommands": [
+                "starti"
+            ],
+            "overrideLaunchCommands": [
+                "-enable-pretty-printing",
+                "monitor halt",
+                "monitor reset",
+                "-target-download",
+                "monitor reset",//prebuild SS//
+                "&&_MTB_RECIPE__VSCODE_JLINK_PROGRAM_STATIC_SECT&&",//prebuild SS//
+                "monitor reset"
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",    // Specifies application entry point name for restart/reset
+            "preLaunchTask": "Build Application", // Set this to run a task from tasks.json before
+                                                     // starting a debug session
+            "showDevDebugOutput": "none"
+        }

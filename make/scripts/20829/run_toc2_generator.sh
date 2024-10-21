@@ -22,7 +22,7 @@ echo_run() { echo "\$ ${@/eval/}" ; "$@" ; }
 
 # Combined image configuration
 LCS=$1
-: ${LCS:="NORMAL_NO_SECURE"}
+: ${LCS:="NON_SECURE"}
 
 # Path to the image and image name for programming (the extension must be bin)
 L1_USER_APP_BIN="$2/$3.bin"
@@ -192,7 +192,7 @@ L1_APP_DESCR_ADDR=$(printf "0x%x" `expr $TOC2_SIZE`)
 BOOT_STRAP_DST_ADDR_DEFAULT_L1RAM=0x20004000
 
 # L1_APP_DESCR entries in hexadecimal
-if [ "$LCS" == "NORMAL_NO_SECURE" ]; then
+if [[ "$LCS" == "NORMAL_NO_SECURE" || "$LCS" == "NON_SECURE" ]]; then
 	BOOT_STRAP_ADDR=0x50 # Fix address for un-signed image
 else
 	BOOT_STRAP_ADDR=0x30 # Fix address for signed image
@@ -306,7 +306,7 @@ fi
 # 4 bytes of padding (encrypted data should be aligned to 0x10 boundary)
 echo -en "\0\0\0\0" >> $L1_DESC_FILE
 
-if [ "$LCS" == "NORMAL_NO_SECURE" ]; then
+if [[ "$LCS" == "NORMAL_NO_SECURE" || "$LCS" == "NON_SECURE" ]]; then
 
 	number=0
 
