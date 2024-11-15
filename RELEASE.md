@@ -16,6 +16,9 @@ This release of the AIROC™ CYW20829 GNU make build recipe includes complete su
     * LLVM Embedded Toolchain for Arm (Experimental)
 
 ### What Changed?
+#### v2.5.1
+* Fixed a postbuild dependency that could cause memcalc to fail.
+
 #### v2.5.0
 * Experimental support for LLVM Embedded Toolchain for Arm.
 * Optimization for speed changed to optimization for size for the IAR toolchain.
