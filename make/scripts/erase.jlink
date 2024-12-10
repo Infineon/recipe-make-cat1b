@@ -1,4 +1,4 @@
-exec EnableEraseAllFlashBanks
+&&EXTERNAL_MEM_ERASE&&
 Erase
 Reset
 Exit

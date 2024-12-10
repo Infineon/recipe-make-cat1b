@@ -1,0 +1,96 @@
+        {
+            "name": "Launch RAM PSoC C3 CM33 (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "&&_MTB_RECIPE__ELF_FILE&&",
+            "servertype": "openocd",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+                "gdb_breakpoint_override hard"
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "overrideLaunchCommands": [
+                "set mem inaccessible-by-default off",
+                "-enable-pretty-printing",
+                "set remotetimeout 15",
+                "monitor reset init",
+                "load &&_MTB_RECIPE__HEX_FILE&&",
+                "mon &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 cortex_m vector_catch reset",
+                "set {int}0x52161000=0x34000000",
+                "set {int}0x52160004=0x05FA0000",
+                "monitor &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 arp_waitstate halted 5000",
+                "mon &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 cortex_m vector_catch none"
+            ],
+            "overrideRestartCommands": [
+                "monitor reset init",
+                "load &&_MTB_RECIPE__HEX_FILE&&",
+                "mon &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 cortex_m vector_catch reset",
+                "set {int}0x52161000=0x34000000",
+                "set {int}0x52160004=0x05FA0000",
+                "monitor &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 arp_waitstate halted 5000",
+                "mon &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 cortex_m vector_catch none"
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
+            "preLaunchTask": "Build",        // Set this to run a task from tasks.json
+                                                                    // before starting a debug session
+            "showDevDebugOutput": "none",
+            "presentation": {
+                "hidden": false,
+                "group": "&&_PRJ_NAME&&"
+            }
+        },
+        // When using 'attach', make sure your program is running on the board and that your executable matches
+        // the image in the chip exactly, or else strange things can happen with breakpoint, variables, etc.
+        {
+            "name": "Attach RAM PSoC C3 CM33 (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "attach",
+            "cwd": "${workspaceFolder}",
+            "executable": "&&_MTB_RECIPE__ELF_FILE&&",
+            "servertype": "openocd",
+            "interface": "swd",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+                "gdb_breakpoint_override hard",
+                "set ENABLE_ACQUIRE 0"
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "overrideAttachCommands": [
+                "set mem inaccessible-by-default off",
+                "-enable-pretty-printing",
+                "set remotetimeout 15",
+                "monitor halt"
+            ],
+            "overrideRestartCommands": [
+                "monitor reset init",
+                "load &&_MTB_RECIPE__HEX_FILE&&",
+                "mon &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 cortex_m vector_catch reset",
+                "set {int}0x52161000=0x34000000",
+                "set {int}0x52160004=0x05FA0000",
+                "monitor &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 arp_waitstate halted 5000",
+                "mon &&_MTB_RECIPE__OPENOCD_CHIP&&.cm33 cortex_m vector_catch none"
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",//PSC3 Only//
+            "showDevDebugOutput": "none",
+            "presentation": {
+                "hidden": false,
+                "group": "&&_PRJ_NAME&&"
+            }
+        }

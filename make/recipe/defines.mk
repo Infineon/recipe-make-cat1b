@@ -2,11 +2,12 @@
 # \file defines.mk
 #
 # \brief
-# Defines, needed for the AIROC(TM) CYW20829 build recipe.
+# Defines, needed for the AIROC(TM) CYW20829 and PSC3 build recipe.
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2024 Cypress Semiconductor Corporation
+# (c) 2018-2024, Cypress Semiconductor Corporation (an Infineon company)
+# or an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +29,11 @@ endif
 
 include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/defines_common.mk
 
+ifeq (CYW20829,$(_MTB_RECIPE__DEVICE_DIE))
+_MTB_RECIPE__IS_DIE_CYW20829=true
+else
+_MTB_RECIPE__IS_DIE_PSC3=true
+endif
 
 ################################################################################
 # General
@@ -36,8 +42,13 @@ _MTB_RECIPE__PROGRAM_INTERFACE_SUPPORTED:=KitProg3 JLink
 #
 # Compactibility interface for this recipe make
 #
+ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
+MTB_RECIPE__EXPORT_INTERFACES:=2 3
+MTB_RECIPE__INTERFACE_VERSION:=2
+else
 MTB_RECIPE__INTERFACE_VERSION:=2
 MTB_RECIPE__EXPORT_INTERFACES:=1 2 3
+endif
 
 #
 # List the supported toolchains
@@ -51,18 +62,62 @@ endif
 # For BWC with Makefiles that do anything with CY_SUPPORTED_TOOLCHAINS
 CY_SUPPORTED_TOOLCHAINS:=$(MTB_SUPPORTED_TOOLCHAINS)
 
-# only has external memory
+ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
+
+#
+# Define the default device mode
+#
+VCORE_ATTRS?=
+
+# Device has internal memory only
+ifneq ($(filter SECURE,$(VCORE_ATTRS)),)
+_MTB_RECIPE__START_FLASH=0x32000000
+else
+_MTB_RECIPE__START_FLASH=0x22000000
+endif
+else
+# Device has external memory only
 _MTB_RECIPE__START_FLASH=0
 CY_START_EXTERNAL_FLASH=0x60000000
+endif
 
 _MTB_RECIPE__ECLIPSE_NEWLINE:=&\#13;&\#10;
+
+ifeq ($(MTB_TYPE),PROJECT)
+_MTB_RECIPE__IS_MULTI_CORE_APPLICATION:=true
+endif
 
 #
 # Architecure specifics
 #
+ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
+_MTB_RECIPE__OPENOCD_CHIP_NAME:=psc3
+_MTB_RECIPE__OPENOCD_DEVICE_CFG:=infineon/psc3.cfg
+_MTB_RECIPE__OPENOCD_TARGET_VAR:=psc3
+_MTB_RECIPE__PREBUILT_SECURE_APP:=$(MTB_TOOLS__TARGET_DIR)/TOOLCHAIN_$(TOOLCHAIN)/COMPONENT_PREBUILT_SECURE_APP/secure_region_flash.elf
+ifeq (128,$(_MTB_RECIPE__DEVICE_FLASH_KB))
+_MTB_RECIPE__JLINK_DEVICE_CFG:=PSC3xxE_tm
+_MTB_RECIPE__JLINK_CFG_ATTACH:=PSC3xxE
+else
+_MTB_RECIPE__JLINK_DEVICE_CFG:=PSC3xxF_tm
+_MTB_RECIPE__JLINK_CFG_ATTACH:=PSC3xxF
+endif
+ifeq (ram,$(APPTYPE))
+_MTB_RECIPE__PREBUILT_SECURE_APP:=$(MTB_TOOLS__TARGET_DIR)/TOOLCHAIN_$(TOOLCHAIN)/COMPONENT_PREBUILT_SECURE_APP/secure_region.elf
+endif
+ifeq (,$(_MTB_RECIPE__IS_MULTI_CORE_APPLICATION))
+ifneq ($(filter NON_SECURE,$(VCORE_ATTRS)),)
+_MTB_RECIPE__ECLIPSE_LAUNCH_APP_COMMANDS:=load $(_MTB_RECIPE__PREBUILT_SECURE_APP)$(_MTB_RECIPE__ECLIPSE_NEWLINE)
+_MTB_RECIPE__PREBUILT_SECURE_APP_FLASH_DOWNLOAD_CMD:=flash write_image erase $(_MTB_RECIPE__PREBUILT_SECURE_APP);
+_MTB_RECIPE__PREBUILT_SECURE_APP_RAM_DOWNLOAD_CMD:=load_image $(_MTB_RECIPE__PREBUILT_SECURE_APP);
+_MTB_RECIPE__OPENOCD_ADDITIONAL_IMG:=LoadFile $(_MTB_RECIPE__PREBUILT_SECURE_APP) 0 reset
+endif
+endif
+else #ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
 _MTB_RECIPE__OPENOCD_CHIP_NAME:=cyw20829
 _MTB_RECIPE__OPENOCD_DEVICE_CFG:=cyw20829.cfg
 _MTB_RECIPE__JLINK_DEVICE_CFG:=CYW20829_tm
+_MTB_RECIPE__OPENOCD_TARGET_VAR:=$${TARGET}
 ifneq (ram,$(APPTYPE))
 _MTB_RECIPE__PROG_FILE_SUFFIX:=.final
 _MTB_RECIPE__PROGRAM_MAIN_APP_CMD=program $(_MTB_RECIPE__ECLIPSE_PROG_FILE) verify
@@ -99,6 +154,7 @@ endif
 endif
 endif
 _MTB_RECIPE__ECLIPSE_LAUNCH_APP_COMMANDS=set $$pc = &amp;$(PC_SYMBOL)$(_MTB_RECIPE__ECLIPSE_NEWLINE)set $$sp = &amp;$(SP_SYMBOL)$(_MTB_RECIPE__ECLIPSE_NEWLINE)
+endif #(,$(_MTB_RECIPE__IS_DIE_PSC3))
 
 #
 # The max external memory size supported
@@ -106,6 +162,7 @@ _MTB_RECIPE__ECLIPSE_LAUNCH_APP_COMMANDS=set $$pc = &amp;$(PC_SYMBOL)$(_MTB_RECI
 #
 CY_MEMORY_EXTERNAL_FLASH=0x08000000
 
+ifeq (,$(_MTB_RECIPE__IS_DIE_PSC3))
 # Map APP_SECURITY_TYPE to VCORE_ATTRS for BWC when VCORE_ATTRS has no SECURE or NON_SECURE values set. 
 ifeq ($(filter SECURE NON_SECURE,$(VCORE_ATTRS)),)
 ifeq ($(APP_SECURITY_TYPE),SECURE)
@@ -121,3 +178,4 @@ ifneq ($(DEVICE_MODE),)
 DEVICE_LIFE_CYCLE_STATE=$(DEVICE_MODE)
 endif # ($(DEVICE_MODE),)
 endif # ($(DEVICE_LIFE_CYCLE_STATE),)
+endif # (,$(_MTB_RECIPE__IS_DIE_PSC3))

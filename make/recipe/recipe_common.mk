@@ -78,30 +78,28 @@ endif
 
 ifneq ($(CY_SECONDSTAGE),)
 
-_MTB_RECIPE__QUERY_EVAL_CONFIG_FILE=$(MTB_TOOLS__OUTPUT_BASE_DIR)/mtbquery-eval-config.mk
-# get the path of design.modus file
-_MTB_RECIPE__CONFIG_MODUS_FILE:=$(filter %.modus,$(CY_SEARCH_ALL_FILES))
+# get the path of design.cyqspi file
+_MTB_RECIPE__QSPI_CONFIG_FILE:=$(filter %.cyqspi,$(CY_SEARCH_ALL_FILES))
 
-ifneq ($(words $(_MTB_RECIPE__CONFIG_MODUS_FILE)),1)
-ifneq ($(words $(_MTB_RECIPE__CONFIG_MODUS_FILE)),0)
-$(warning Multiple .modus files found: $(_MTB_RECIPE__CONFIG_MODUS_FILE) -- using the first.)
- _MTB_RECIPE__CONFIG_MODUS_FILE:=$(word 1,$(_MTB_RECIPE__CONFIG_MODUS_FILE))
+ifneq ($(words $(_MTB_RECIPE__QSPI_CONFIG_FILE)),1)
+ifneq ($(words $(_MTB_RECIPE__QSPI_CONFIG_FILE)),0)
+$(warning Multiple .cyqspi files found: $(_MTB_RECIPE__QSPI_CONFIG_FILE) -- using the first.)
+ _MTB_RECIPE__QSPI_CONFIG_FILE:=$(word 1,$(_MTB_RECIPE__QSPI_CONFIG_FILE))
 endif
 endif
 
 _MTB_RECIPE__PROJECT_DIR_NAME=$(notdir $(realpath $(MTB_TOOLS__PRJ_DIR)))
 
-ifeq ($(_MTB_RECIPE__CONFIG_MODUS_FILE),)
-_MTB_RECIPE__CONFIG_MODUS_OUTPUT=
+ifeq ($(_MTB_RECIPE__QSPI_CONFIG_FILE),)
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH=
 _MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_WITH_FLAG=
 _MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION_WITH_FLAG=
 else
-_MTB_RECIPE__CONFIG_MODUS_OUTPUT=$(call mtb__get_dir,$(_MTB_RECIPE__CONFIG_MODUS_FILE))/GeneratedSource
-_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_WITH_FLAG=-s &quot;$(_MTB_RECIPE__CONFIG_MODUS_OUTPUT)&quot;&\#13;&\#10;
-_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION_WITH_FLAG=-s &quot;$(patsubst $(call mtb_path_normalize,$(MTB_TOOLS__PRJ_DIR)/..)/%,%,$(call mtb_path_normalize,$(_MTB_RECIPE__CONFIG_MODUS_OUTPUT)))&quot;&\#13;&\#10;
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH=$(call mtb__get_dir,$(_MTB_RECIPE__QSPI_CONFIG_FILE))/GeneratedSource
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_WITH_FLAG=-s &quot;$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH)&quot;&\#13;&\#10;
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION_WITH_FLAG=-s &quot;$(patsubst $(call mtb_path_normalize,$(MTB_TOOLS__PRJ_DIR)/..)/%,%,$(call mtb_path_normalize,$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH)))&quot;&\#13;&\#10;
 endif
-_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH=$(_MTB_RECIPE__CONFIG_MODUS_OUTPUT)
-_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION=$(patsubst $(call mtb_path_normalize,$(MTB_TOOLS__PRJ_DIR)/..)/%,%,$(call mtb_path_normalize,$(_MTB_RECIPE__CONFIG_MODUS_OUTPUT)))
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION=$(patsubst $(call mtb_path_normalize,$(MTB_TOOLS__PRJ_DIR)/..)/%,%,$(call mtb_path_normalize,$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH)))
 endif
 
 ################################################################################

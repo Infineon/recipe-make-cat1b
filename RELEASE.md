@@ -1,8 +1,8 @@
-### AIROC™ CYW20829 GNU make Build System
-This repo provides the build recipe make files and scripts for building and programming AIROC™ CYW20829 applications. Builds can be run either through a command-line interface (CLI) or through a supported IDE such as Eclipse or VS Code.
+### AIROC™ CYW20829 and PSOC™ Control C3 GNU make Build System
+This repo provides the build recipe make files and scripts for building and programming AIROC™ CYW20829 and PSOC™ Control C3 applications. Builds can be run either through a command-line interface (CLI) or through a supported IDE such as Eclipse or VS Code.
 
 ### What's Included?
-This release of the AIROC™ CYW20829 GNU make build recipe includes complete support for building, programming, and debugging AIROC™ CYW20829 application projects. It is expected that a code example contains a top level make file for itself and references a Board Support Package (BSP) that defines specific items, like the AIROC™ CYW20829 part, for the target board. Supported functionality includes the following:
+This release of the AIROC™ CYW20829 and PSOC™ Control C3 GNU make build recipe includes complete support for building, programming, and debugging AIROC™ CYW20829 and PSOC™ Control C3 application projects. It is expected that a code example contains a top level make file for itself and references a Board Support Package (BSP) that defines specific items, like the AIROC™ CYW20829 or PSOC™ Control C3 part, for the target board. Supported functionality includes the following:
 
 * Supported operations:
     * Build
@@ -16,6 +16,9 @@ This release of the AIROC™ CYW20829 GNU make build recipe includes complete su
     * LLVM Embedded Toolchain for Arm (Experimental)
 
 ### What Changed?
+#### v2.6.0
+* PSOC™ Control C3 device support added.
+
 #### v2.5.1
 * Fixed a postbuild dependency that could cause memcalc to fail.
 
@@ -53,7 +56,7 @@ Builds require that the ModusToolbox tools be installed on your machine. This co
 To list the build options, run the "help" target by typing "make help" in CLI. For a verbose documentation on a specific subject type "make help CY_HELP={variable/target}", where "variable" or "target" is one of the listed make variables or targets.
 
 ### Supported Software and Tools
-This version of the AIROC™ CYW20829 build system was validated for compatibility with the following Software and Tools:
+This version of the AIROC™ CYW20829 and PSOC™ Control C3 build system was validated for compatibility with the following Software and Tools:
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
@@ -69,5 +72,4 @@ Minimum required ModusToolbox Software Environment: v3.0
 * [ModusToolbox](https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software)
 
 ---
-(c) 2022-2024, Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation. All rights reserved.
-
+(c) 2022-2024, Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation.  All rights reserved.

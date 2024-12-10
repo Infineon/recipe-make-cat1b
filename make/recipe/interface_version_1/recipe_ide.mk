@@ -6,7 +6,8 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2022-2024 Cypress Semiconductor Corporation
+# (c) 2022-2024, Cypress Semiconductor Corporation (an Infineon company)
+# or an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -132,7 +133,11 @@ ewarm8_recipe_data_file:
 
 ewarm8: ewarm8_recipe_data_file
 
+ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
+_MTB_RECIPE__CMSIS_ARCH_NAME:=CAT1B_DFP
+else
 _MTB_RECIPE__CMSIS_ARCH_NAME:=AIROC_DFP
+endif
 _MTB_RECIPE__CMSIS_VENDOR_NAME:=Infineon
 _MTB_RECIPE__CMSIS_VENDOR_ID:=7
 

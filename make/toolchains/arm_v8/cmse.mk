@@ -55,3 +55,16 @@ ifneq ($(NSC_VENEER),)
 MTB_RECIPE__LIBS+=$(NSC_VENEER)
 endif
 endif
+
+################################################################################
+# Vulnerabilities check
+################################################################################
+ifneq ($(CY_SECONDSTAGE),)
+ifneq ($(filter SECURE,$(VCORE_ATTRS)),)
+ifneq ($(VFP_SELECT),softfloat)
+$(info FPU is not supported by secure project due to VLLDM Instruction Security Vulnerability\
+CVE-2021-35465. Use VFP_SELECT=softfloat instead of VFP_SELECT=$(VFP_SELECT). For more information see\
+https://developer.arm.com/Arm%20Security%20Center/VLLDM%20Instruction%20Security%20Vulnerability)
+endif # ($(VFP_SELECT),softfloat)
+endif # ($(filter SECURE,$(VCORE_ATTRS)),)
+endif # ($(CY_SECONDSTAGE),)
