@@ -100,7 +100,6 @@ MTB_RECIPE__LDFLAGS+=$(_MTB_RECIPE__MXSV2_LDFLAGS)
 
 # Postbuilds for l1ram and flash applications for second stage
 ifeq ($(APPTYPE),$(filter $(APPTYPE),l1ram flash))
-ifeq ($(CY_SECONDSTAGE),true)
 
 _MTB_RECIPE_20829_SREC_CAT_UTIL=$(CY_TOOL_srec_cat_EXE_ABS)
 
@@ -122,7 +121,6 @@ _MTB_RECIPE__MXSV2_POSTBUILD+=$(_MTB_RECIPE_20829_SREC_CAT_UTIL) $(MTB_TOOLS__OU
 _MTB_RECIPE__MXSV2_POSTBUILD+=rm -rf $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin;cp -f $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex $(MTB_RECIPE__LAST_CONFIG_DIR)/$(APPNAME).final.hex
 endif #($(_MTB_RECIPE_20829_SREC_CAT_UTIL),)
 
-endif
 endif # apptype l1ram flash
 
 ################################################################################

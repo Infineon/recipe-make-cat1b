@@ -67,7 +67,11 @@ _MTB_RECIPE_APP_LOAD_ADDR=0x20004200
 _MTB_RECIPE_APP_SP=$(_MTB_RECIPE_APP_LOAD_ADDR)
 _MTB_RECIPE_APP_PC=$(shell printf "0x%x" $$(($(_MTB_RECIPE_APP_LOAD_ADDR) + 0x04)))
 ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
-_MTB_RECIPE_OPENOCD_PREPARE_APP=init; reset init; load_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); $(_MTB_RECIPE__PREBUILT_SECURE_APP_RAM_DOWNLOAD_CMD); reg pc [mrw 0x34000004];
+ifneq ($(filter NON_SECURE,$(VCORE_ATTRS)),)
+_MTB_RECIPE_OPENOCD_PREPARE_APP=init; reset init; load_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); load_image $(_MTB_RECIPE__PREBUILT_SECURE_APP); reg pc [mrw 0x34000004];
+else
+_MTB_RECIPE_OPENOCD_PREPARE_APP=init; reset init; load_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); reg pc [mrw 0x34000004];
+endif #($(filter NON_SECURE,$(VCORE_ATTRS)),)
 else
 _MTB_RECIPE_OPENOCD_PREPARE_APP=init; reset init; load_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) $(_MTB_RECIPE_APP_LOAD_ADDR); reg sp [mrw $(_MTB_RECIPE_APP_SP)]; reg pc [mrw $(_MTB_RECIPE_APP_PC)];
 endif #(,$(_MTB_RECIPE__IS_DIE_PSC3))
@@ -100,7 +104,11 @@ _MTB_RECIPE_JLINK_CMDFILE_ERASE=Erase
 _MTB_RECIPE_OPENOCD_PROGRAM=init; reset init; erase_all; flash write_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); verify_image $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); reset run; shutdown;
 else #($(ERASE_OPTION),skip)
 ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
-_MTB_RECIPE_OPENOCD_PROGRAM=init; reset init; flash write_image erase $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); $(_MTB_RECIPE__PREBUILT_SECURE_APP_FLASH_DOWNLOAD_CMD); reset run; shutdown;
+ifneq ($(filter NON_SECURE,$(VCORE_ATTRS)),)
+_MTB_RECIPE_OPENOCD_PROGRAM=init; reset init; flash write_image erase $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); flash write_image erase $(_MTB_RECIPE__PREBUILT_SECURE_APP); reset run; shutdown;
+else
+_MTB_RECIPE_OPENOCD_PROGRAM=init; reset init; flash write_image erase $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG); reset run; shutdown;
+endif #($(filter NON_SECURE,$(VCORE_ATTRS)),)
 else
 _MTB_RECIPE_OPENOCD_PROGRAM=program $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) verify reset exit;
 endif #(,$(_MTB_RECIPE__IS_DIE_PSC3))

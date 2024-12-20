@@ -16,6 +16,9 @@ This release of the AIROC™ CYW20829 and PSOC™ Control C3 GNU make build reci
     * LLVM Embedded Toolchain for Arm (Experimental)
 
 ### What Changed?
+#### v2.7.0
+* Added Ninja support. Ninja build will be enabled by default with ModusToolbox 3.4, and latest core-make. To disable Ninja build set NINJA to empty-String. (For example: "make build NINJA=").
+
 #### v2.6.0
 * PSOC™ Control C3 device support added.
 
@@ -60,7 +63,7 @@ This version of the AIROC™ CYW20829 and PSOC™ Control C3 build system was va
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox Software Environment         | 3.3     |
+| ModusToolbox Software Environment         | 3.4     |
 | GCC Compiler                              | 11.3    |
 | IAR Compiler                              | 9.3     |
 | ARM Compiler                              | 6.16    |
