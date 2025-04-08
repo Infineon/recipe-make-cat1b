@@ -1,0 +1,74 @@
+        {
+            "name": "&&MTB_COMBINE_SIGN_&&IDX&&_CONFIG_NAME&& Launch PSoC C3 CM33 (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "&&_MTB_RECIPE__ELF_FILE&&",
+            "servertype": "openocd",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+                "set DEBUG_CERTIFICATE &&_MTB_RECIPE__DBG_CERTIFICATE_PATH&&"
+            ],
+            "preLaunchCommands": [
+                // Add symbol file of NS or S project
+                &&MTB_COMBINE_SIGN_&&IDX&&_VSCODE_EXTRA_ELF_PATH&&
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "loadFiles": [
+                "&&MTB_COMBINE_SIGN_&&IDX&&_VSCODE_HEX_PATH&&",
+                "&&_MTB_RECIPE__PREBUILT_SECURE_APP&&"//PSC3 NON_SECURE Only//
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
+            "preLaunchTask": "Build Application",    // Set this to run a task from tasks.json
+                                                        // before starting a debug session
+            "showDevDebugOutput": "none",
+            "presentation": {
+                "hidden": false,
+                "group": "&&_PRJ_NAME&&"
+            }
+        },
+        // When using 'attach', make sure your program is running on the board and that your
+        // executable matches the image in the chip exactly, or else strange things can happen
+        // with breakpoints, variables, etc.
+        {
+            "name": "&&MTB_COMBINE_SIGN_&&IDX&&_CONFIG_NAME&& Attach PSoC C3 CM33 (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "attach",
+            "cwd": "${workspaceFolder}",
+            "executable": "&&_MTB_RECIPE__ELF_FILE&&",
+            "servertype": "&&_MTB_RECIPE__ATTACH_SERVER_TYPE&&",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+                "set ENABLE_ACQUIRE 0"
+            ],
+            "preAttachCommands": [
+                // Add symbol file of NS or S project
+                &&MTB_COMBINE_SIGN_&&IDX&&_VSCODE_EXTRA_ELF_PATH&&
+            ],
+            "overrideRestartCommands": [
+                "starti"
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",    // Specifies application entry point name for restart/reset
+            "showDevDebugOutput": "none",
+            "presentation": {
+                "hidden": false,
+                "group": "&&_PRJ_NAME&&"
+            }
+        }

@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2024, Cypress Semiconductor Corporation (an Infineon company)
+# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company)
 # or an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -37,14 +37,14 @@ _MTB_RECIPE__OPENOCD_DEBUG_PREFIX=$(_MTB_RECIPE__OPENOCD_CHIP_NAME).cm33 configu
 ifeq ($(TOOLCHAIN),A_Clang)
 _MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin $(TOOLCHAIN_VECT_BASE_CM33)
 else
-_MTB_RECIPE__OPENOCD_SYMBOL_IMG=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).$(MTB_RECIPE__SUFFIX_TARGET)
+_MTB_RECIPE__OPENOCD_SYMBOL_IMG=$(_MTB_RECIPE__LAST_CONFIG_TARG_FILE)
 ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
-_MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).$(MTB_RECIPE__SUFFIX_PROGRAM)
+_MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(_MTB_RECIPE__LAST_CONFIG_PROG_FILE)
 else
 ifeq ($(APPTYPE),ram)
 _MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin
 else
-_MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).final.hex
+_MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(MTB_RECIPE__LAST_CONFIG_DIR)/$(APPNAME).final.hex
 endif #ifeq ($(APPTYPE),ram)
 endif #(,$(_MTB_RECIPE__IS_DIE_PSC3))
 endif #($(TOOLCHAIN),A_Clang)

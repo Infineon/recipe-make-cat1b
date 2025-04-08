@@ -6,7 +6,7 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2024, Cypress Semiconductor Corporation (an Infineon company)
+# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company)
 # or an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -43,14 +43,14 @@ _MTB_RECIPE__PROGRAM_INTERFACE_SUPPORTED:=KitProg3 JLink
 # Compactibility interface for this recipe make
 #
 ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
-MTB_RECIPE__EXPORT_INTERFACES:=2 3
+MTB_RECIPE__EXPORT_INTERFACES:=2 3 4
 MTB_RECIPE__INTERFACE_VERSION:=2
 else
 MTB_RECIPE__INTERFACE_VERSION:=2
-MTB_RECIPE__EXPORT_INTERFACES:=1 2 3
+MTB_RECIPE__EXPORT_INTERFACES:=1 2 3 4
 endif
 
-MTB_RECIPE__NINJA_SUPPORT:=1
+MTB_RECIPE__NINJA_SUPPORT:=1 2
 #
 # List the supported toolchains
 #

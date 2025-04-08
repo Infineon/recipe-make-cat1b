@@ -6,7 +6,7 @@
 #
 ################################################################################
 # \copyright
-# (c) 2023-2024, Cypress Semiconductor Corporation (an Infineon company) or
+# (c) 2023-2025, Cypress Semiconductor Corporation (an Infineon company) or
 # an affiliate of Cypress Semiconductor Corporation. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -61,8 +61,9 @@ endif
 ################################################################################
 ifneq ($(filter SECURE,$(VCORE_ATTRS)),)
 ifneq ($(VFP_SELECT),softfloat)
-$(info FPU is not supported by secure project due to VLLDM Instruction Security Vulnerability\
-CVE-2021-35465. Use VFP_SELECT=softfloat instead of VFP_SELECT=$(VFP_SELECT). For more information see\
+$(info Use of the FPU on a secure project may be susceptible to an VLLDM Instruction Security\
+Vulnerability (CVE-2021-35465). Verify the toolchain you are using already provides a workaround\
+or use VFP_SELECT=softfloat instead of VFP_SELECT=$(VFP_SELECT). For more information see\
 https://developer.arm.com/Arm%20Security%20Center/VLLDM%20Instruction%20Security%20Vulnerability)
 endif # ($(VFP_SELECT),softfloat)
 endif # ($(filter SECURE,$(VCORE_ATTRS)),)
