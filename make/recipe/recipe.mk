@@ -53,7 +53,7 @@ _MTB_RECIPE__ACLANG_POSTBUILD=\
 	$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin
 
 # Transition the device to normal-non-secure. This command expect the BSP to provide variable CY_BSP_PROVISION_NORMAL_NON_SECURE_BINARIES about where the provisioning binaries blob files are located.
-RECIPE_TRANSITION_NORMAL_NON_SECURE=$(CY_TOOL_openocd_EXE_ABS) -s $(CY_TOOL_openocd_scripts_SCRIPT_ABS) -c "source $(CY_TOOL_openocd_scripts_SCRIPT_ABS)/interface/kitprog3.cfg; source $(CY_TOOL_openocd_scripts_SCRIPT_ABS)/target/cyw20829.cfg; provision_no_secure $(MTB_TOOLS__RECIPE_DIR)/make/provision/cyapp_prov_oem_signed_icv0.bin  $(CY_BSP_PROVISION_NORMAL_NON_SECURE_BINARIES); exit"
+RECIPE_TRANSITION_NORMAL_NON_SECURE=$(CY_TOOL_openocd_EXE_ABS) -s $(CY_TOOL_openocd_scripts_SCRIPT_ABS) -c "source $(CY_TOOL_openocd_scripts_SCRIPT_ABS)/interface/kitprog3.cfg; source $(CY_TOOL_openocd_scripts_SCRIPT_ABS)/target/infineon/cyw20829.cfg; provision_no_secure $(MTB_TOOLS__RECIPE_DIR)/make/provision/cyapp_prov_oem_signed_icv0.bin  $(CY_BSP_PROVISION_NORMAL_NON_SECURE_BINARIES); exit"
 
 RECIPE_DEVICE_TRANSITION_TARGET=recipe_device_transition
 $(RECIPE_DEVICE_TRANSITION_TARGET):

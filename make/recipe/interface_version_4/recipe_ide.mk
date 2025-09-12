@@ -214,6 +214,7 @@ endif
 endif
 else #(,$(_MTB_RECIPE__IS_DIE_PSC3))
 	$(call mtb__file_write,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^(.*)//20829 Only//(.*)$$=\1\2)
+	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_TEMPLATE_REGEX_DATA_FILE),^.*//PSC3 Only//.*$$=)
 ifeq ($(VS_ERASE),1)
 ifeq ($(SS_CONFIG),1)
 # program application, program static section

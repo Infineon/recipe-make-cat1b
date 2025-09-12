@@ -16,6 +16,11 @@ This release of the AIROC™ CYW20829 and PSOC™ Control C3 GNU make build reci
     * LLVM Embedded Toolchain for Arm (Experimental)
 
 ### What Changed?
+#### v2.8.1
+* Updated launch configurations to reference the latest OpenOCD config.
+* Fixed an issue where different JLink versions could be used for programming and debugging.
+* Fixed an issue where external memory was not erased with the JLink Erase All configuration.
+
 #### v2.8.0
 * Moved CFLAGS, CXXFLAGS, ASFLAGS, LDFLAGS variables to be added after default flags. In case of conflict, most toolchains select the last flags as the option. This allows those variables to overwrite the default flags.
 * Added support for GNU assembly syntax when using ARM toolchain.
