@@ -85,6 +85,7 @@ recipe_vscode_common_text_replacement_data_file:
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__PROBE_INTERFACE&&=$(_MTB_RECIPE__PROBE_INTERFACE))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__VSCODE_OPENOCD_PROBE_SERIAL_CMD&&=$(_MTB_RECIPE__OPENOCD_PROBE_SERIAL))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__PROBE_SERIAL&&=$(MTB_PROBE_SERIAL))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__OPENOCD_BOARD&&=$(_MTB_RECIPE__OPENOCD_BOARD))
 
 recipe_vscode_common_metadata_file:
 	$(call mtb__file_write,$(_MTB_RECIPE__IDE_VSCODE_COMMON_META_DATA_FILE),)
@@ -164,6 +165,7 @@ eclipse_generate: MTB_CORE__EXPORT_CMDLINE += -textdata $(_MTB_RECIPE__IDE_COMMO
 recipe_eclipse_common_text_replacement_data_file:
 	$(call mtb__file_write,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__OPENOCD_CFG&&=$(_MTB_RECIPE__OPENOCD_DEVICE_CFG))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__OPENOCD_CHIP&&=$(_MTB_RECIPE__OPENOCD_CHIP_NAME))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__OPENOCD_RUN_RESTART_CMD_ATTACH_ECLIPSE&&=$(_MTB_RECIPE__OPENOCD_RUN_RESTART_CMD_ATTACH_ECLIPSE))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__SVD_PATH&&=$(_MTB_RECIPE__ECLIPSE_OPENOCD_SVD_PATH))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__SYM_FILE&&=$(_MTB_RECIPE__ECLIPSE_SYM_FILE))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__APP_PROG_FILE&&=$(_MTB_RECIPE__ECLIPSE_APP_PROG_FILE))
@@ -175,6 +177,7 @@ recipe_eclipse_common_text_replacement_data_file:
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__PROG_TARGET&&=$(_MTB_RECIPE__PROG_TARGET))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__BUILD_NUM_PROCESSOR&&=$(_MTB_CORE___VSCODE_BUILD_NUM_PROCESSOR))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__ECLIPSE_OPENOCD_PROBE_SERIAL_CMD&&=$(if $(_MTB_RECIPE__OPENOCD_PROBE_SERIAL),-c &quot;$(_MTB_RECIPE__OPENOCD_PROBE_SERIAL)&quot;&#13;&#10;,))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__OPENOCD_BOARD&&=$(if $(_MTB_RECIPE__OPENOCD_BOARD),-c &quot;$(_MTB_RECIPE__OPENOCD_BOARD)&quot;&#13;&#10;,))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__PROBE_INTERFACE&&=$(_MTB_RECIPE__PROBE_INTERFACE))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_COMMON_TEXT_DATA_FILE),&&_MTB_RECIPE__PROBE_SERIAL&&=$(MTB_PROBE_SERIAL))
 
@@ -227,5 +230,7 @@ recipe_vscode_combine_sign_meta:
 	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_COMBINE_SIGN_MEATA_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__VSCODE_CS_TASKS_JSON)=.vscode/tasks_&&IDX&&.json)
 	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_COMBINE_SIGN_MEATA_DATA_FILE),TEMPLATE_REPEAT=.vscode/tasks_&&IDX&&.json=$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES))
 	$(call mtb__file_append,$(_MTB_RECIPE__VSCODE_COMBINE_SIGN_MEATA_DATA_FILE),MERGE_TASKS_JSON=.vscode/tasks.json=.vscode/tasks_partial.json $(foreach index,$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES),.vscode/tasks_$(index).json))
+
+.PHONY: recipe_ide_combine_sign_text_replacement recipe_vscode_combine_sign_meta
 
 endif #ifneq ($(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES),)

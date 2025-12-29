@@ -138,24 +138,35 @@ ifeq ($(LIBNAME),)
 
 _MTB_RECIPE__PROG_FILE:=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME)$(_MTB_RECIPE__PROG_FILE_SUFFIX).$(MTB_RECIPE__SUFFIX_PROGRAM)
 _MTB_RECIPE__TARG_FILE:=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).$(MTB_RECIPE__SUFFIX_TARGET)
+ifneq (,$(MTB_IDE__TARG_FILE))
+_MTB_RECIPE__TARG_DEPENDENCY_FILE:=$(call mtb__path_normalize,$(MTB_IDE__TARG_FILE))
+else
+_MTB_RECIPE__TARG_DEPENDENCY_FILE:=$(_MTB_RECIPE__TARG_FILE)
+endif
 
 recipe_postbuild: $(_MTB_RECIPE__PROG_FILE)
 
-$(_MTB_RECIPE__PROG_FILE): $(_MTB_RECIPE__TARG_FILE)
+$(_MTB_RECIPE__PROG_FILE): $(_MTB_RECIPE__TARG_DEPENDENCY_FILE)
 ifeq ($(TOOLCHAIN),A_Clang)
 	$(_MTB_RECIPE__ACLANG_POSTBUILD)
 endif
 ifeq ($(TOOLCHAIN),ARM)
-	$(MTB_TOOLCHAIN_ARM__BASE_DIR)/bin/fromelf --output $(_MTB_RECIPE__PROG_FILE) --i32combined $(_MTB_RECIPE__TARG_FILE)
+	$(MTB_TOOLCHAIN_ARM__BASE_DIR)/bin/fromelf --output $@ --i32combined $<
 endif
 ifeq ($(TOOLCHAIN),IAR)
-	$(MTB_TOOLCHAIN_GCC_ARM__OBJCOPY) -O ihex $(_MTB_RECIPE__TARG_FILE) $(_MTB_RECIPE__PROG_FILE)
+	$(MTB_TOOLCHAIN_GCC_ARM__OBJCOPY) -O ihex $< $@
 endif
 ifeq ($(TOOLCHAIN),GCC_ARM)
-	$(MTB_TOOLCHAIN_GCC_ARM__OBJCOPY) -O ihex $(_MTB_RECIPE__TARG_FILE) $(_MTB_RECIPE__PROG_FILE)
+	$(MTB_TOOLCHAIN_GCC_ARM__OBJCOPY) -O ihex $< $@
 endif
 ifeq ($(TOOLCHAIN),LLVM_ARM)
-	$(MTB_TOOLCHAIN_GCC_ARM__OBJCOPY) -O ihex $(_MTB_RECIPE__TARG_FILE) $(_MTB_RECIPE__PROG_FILE)
+	$(MTB_TOOLCHAIN_GCC_ARM__OBJCOPY) -O ihex $< $@
+endif
+
+cpy_recipe_trg:
+ifneq (,$(MTB_IDE__TARG_FILE))
+	$(MTB__NOISE)rm -f $(_MTB_RECIPE__TARG_FILE)
+	$(MTB__NOISE)cp -f $(call mtb__path_normalize,$(MTB_IDE__TARG_FILE)) $(_MTB_RECIPE__TARG_FILE)
 endif
 
 # There are 2 dependencies on this file.
@@ -183,7 +194,7 @@ $(_MTB_RECIPE__LAST_CONFIG_PROG_FILE_D): | $(MTB_RECIPE__LAST_CONFIG_DIR)
 
 $(_MTB_RECIPE__LAST_CONFIG_PROG_FILE): $(_MTB_RECIPE__PROG_FILE) $(_MTB_RECIPE__LAST_CONFIG_PROG_FILE_D) | mtb_conditional_postbuild
 	$(MTB__NOISE)cp -f $(_MTB_RECIPE__PROG_FILE) $@
-	$(MTB__NOISE)cp -f $(_MTB_RECIPE__TARG_FILE) $(_MTB_RECIPE__LAST_CONFIG_TARG_FILE)
+	$(MTB__NOISE)cp -f $(_MTB_RECIPE__TARG_DEPENDENCY_FILE) $(_MTB_RECIPE__LAST_CONFIG_TARG_FILE)
 
 ifeq ($(MTB_APPLICATION_PROMOTE),true)
 _MTB_RECIPE__PROMOTE=true
@@ -211,12 +222,9 @@ $(_MTB_RECIPE__COPIED_PROJECT_PROG_FILE).d : | $(_MTB_RECIPE__PRJ_HEX_DIR)
 	fi
 
 # Copy project-specific program image to the application directory
-# Conditionally copy the elf file so that it may be used as debugging symbols.
 $(_MTB_RECIPE__COPIED_PROJECT_PROG_FILE): $(_MTB_RECIPE__PROG_FILE) $(_MTB_RECIPE__COPIED_PROJECT_PROG_FILE).d
 	$(MTB__NOISE)cp -f $(_MTB_RECIPE__PROG_FILE) $@
-ifneq ($(COMBINE_SIGN_JSON),)
-	$(MTB__NOISE)cp -f $(_MTB_RECIPE__TARG_FILE) $(_MTB_RECIPE__PRJ_HEX_DIR)/$(_MTB_RECIPE__PROJECT_DIR_NAME).$(MTB_RECIPE__SUFFIX_TARGET)
-endif
+	$(MTB__NOISE)cp -f $(_MTB_RECIPE__TARG_DEPENDENCY_FILE) $(_MTB_RECIPE__PRJ_HEX_DIR)/$(_MTB_RECIPE__PROJECT_DIR_NAME).$(MTB_RECIPE__SUFFIX_TARGET)
 
 ifeq ($(COMBINE_SIGN_JSON),)
 ifneq ($(MTB_APPLICATION_SUBPROJECTS),)
@@ -275,46 +283,9 @@ endif
 endif #($(COMBINE_SIGN_JSON),)
 endif #($(LIBNAME),)
 
-################################################################################
-# Memory Consumption
-################################################################################
-
-ifeq ($(TOOLCHAIN),A_Clang)
-_MTB_RECIPE__GEN_READELF=
-_MTB_RECIPE__MEMORY_CAL=
-else
-ifeq ($(TOOLCHAIN),LLVM_ARM)
-_MTB_RECIPE__READELF=$(MTB_TOOLCHAIN_LLVM_ARM__READELF)
-else
-_MTB_RECIPE__READELF=$(MTB_TOOLCHAIN_GCC_ARM__READELF)
-endif
-_MTB_RECIPE__GEN_READELF=$(_MTB_RECIPE__READELF) -Sl $(_MTB_RECIPE__TARG_FILE) > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).readelf
-_MTB_RECIPE__MEM_CALC=\
-	bash --norc --noprofile\
-	$(MTB_TOOLS__CORE_DIR)/make/scripts/memcalc.bash\
-	$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).readelf\
-	$(_MTB_RECIPE__DEVICE_FLASH_KB)\
-	$(_MTB_RECIPE__START_FLASH)
-endif
-
-_MTB_RECIPE__MEMCALC_CACHE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/memcalc_cache.txt
-
-ifeq ($(LIBNAME),)
-$(_MTB_RECIPE__MEMCALC_CACHE): $(_MTB_RECIPE__TARG_FILE) | app
-	$(MTB__NOISE)echo Calculating memory consumption: $(DEVICE) $(TOOLCHAIN) $(MTB_TOOLCHAIN_OPTIMIZATION)
-	$(MTB__NOISE)echo
-	$(MTB__NOISE)$(_MTB_RECIPE__GEN_READELF)
-	$(MTB__NOISE)$(_MTB_RECIPE__MEM_CALC) > $@
-	$(MTB__NOISE)echo
-
-memcalc: $(_MTB_RECIPE__MEMCALC_CACHE)
-	$(MTB__NOISE)cat $(_MTB_RECIPE__MEMCALC_CACHE)
-else
-memcalc:
-	@:
-endif
+include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/memcalc.mk
 
 #
 # Identify the phony targets
 #
-.PHONY: sign_combine recipe_postbuild application_postbuild memcalc
+.PHONY: sign_combine recipe_postbuild application_postbuild cpy_recipe_target

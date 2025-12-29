@@ -26,7 +26,7 @@
 MTB_RECIPE__IDE_SUPPORTED:=eclipse vscode uvision5 ewarm8
 include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/interface_version_1/recipe_ide_common.mk
 
-# Path to debug certificatee
+# Path to debug certificate
 CY_DBG_CERTIFICATE_PATH?=./packets/debug_cert.bin
 
 CY_QSPI_FLM_DIR_OUTPUT?=$(CY_QSPI_FLM_DIR)
@@ -133,7 +133,7 @@ ewarm8_recipe_data_file:
 
 ewarm8: ewarm8_recipe_data_file
 
-ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
+ifeq ($(_MTB_RECIPE__IS_DIE_PSC3),true)
 _MTB_RECIPE__CMSIS_ARCH_NAME:=CAT1B_DFP
 else
 _MTB_RECIPE__CMSIS_ARCH_NAME:=AIROC_DFP

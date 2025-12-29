@@ -38,7 +38,10 @@
             "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
             "preLaunchTask": "Build",        // Set this to run a task from tasks.json
                                                                     // before starting a debug session
-            "showDevDebugOutput": "none"
+            "showDevDebugOutput": "none",
+            "liveWatch": {
+                "enabled": true
+            }
         },
         // When using 'attach', make sure your program is running on the board and that your executable matches
         // the image in the chip exactly, or else strange things can happen with breakpoint, variables, etc.
@@ -77,7 +80,10 @@
             // svdFile is optional, it can be very large.
             "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
             "breakAfterReset": true,
-            "showDevDebugOutput": "none"
+            "showDevDebugOutput": "none",
+            "liveWatch": {
+                "enabled": true
+            }
         },
         {
             "name": "Program RAM (KitProg3_MiniProg4)",

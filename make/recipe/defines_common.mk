@@ -27,6 +27,8 @@ ifeq ($(WHICHFILE),true)
 $(info Processing $(lastword $(MAKEFILE_LIST)))
 endif
 
+MTB_RECIPE__MEMREPORT_SUPPORT:=1
+
 ################################################################################
 # BSP
 ################################################################################
@@ -48,4 +50,8 @@ _MTB_RECIPE__DEVICE_FLASH_KB:=$(DEVICE_$(DEVICE)_FLASH_KB)
 
 ifeq ($(MTB_RECIPE__CORE),CM55)
 MTB_RECIPE__VFP_SELECT_DEFAULT=hardfp
+endif
+
+ifneq ($(filter $(_MTB_RECIPE__DEVICE_DIE)_PSVP,$(DEFINES)),)
+_MTB_RECIPE__OPENOCD_BOARD=set BOARD psvp
 endif

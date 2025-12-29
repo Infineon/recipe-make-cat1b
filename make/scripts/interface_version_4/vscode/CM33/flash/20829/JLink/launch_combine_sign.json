@@ -30,5 +30,8 @@
             "runToEntryPoint": "main",    // Specifies application entry point name for restart/reset
             "preLaunchTask": "Build Application", // Set this to run a task from tasks.json before
                                                      // starting a debug session
-            "showDevDebugOutput": "none"
+            "showDevDebugOutput": "none",
+            "liveWatch": {
+                "enabled": true
+            }
         }

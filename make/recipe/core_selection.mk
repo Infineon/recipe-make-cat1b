@@ -23,17 +23,15 @@
 # limitations under the License.
 ################################################################################
 
-# 
+#
 # CORE
 #   - The type of ARM core used by the application.
 #   - May be set by user in Makefile or by a BSP.
-#   - If not set, assume CM0P.
-#   - Valid COREs are determined by the selected toolchain. 
-#     Currently this includes: CM0, CM0P, CM4, and CM33.
+#   - If not set, assume CM33.
+#   - Valid CORE for recipe-make-cat1b is CM33.
 #
-#
+
 # Define the default core
-#
 ifeq ($(CORE),)
 MTB_RECIPE__CORE?=CM33
 else
@@ -46,13 +44,14 @@ else
 MTB_RECIPE__CORE_NAME=$(CORE_NAME)
 endif
 
-COMPONENTS+=$(MTB_RECIPE__CORE) $(MTB_RECIPE__CORE_NAME)
+MTB_RECIPE__COMPONENT+=$(MTB_RECIPE__CORE) $(MTB_RECIPE__CORE_NAME)
 
 ################################################################################
 # Tools specifics
 ################################################################################
 
 ifeq (CYW20829,$(DEVICE_$(DEVICE)_DIE))
-# Always overwrite VFP_SELECT for 20829 devices. 20829 devices don't have a FPU
+# Always overwrite VFP_SELECT for 20829 devices. 20829 devices don't have a FPU.
 VFP_SELECT:=softfloat
 endif
+

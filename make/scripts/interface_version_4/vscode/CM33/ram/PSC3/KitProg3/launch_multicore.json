@@ -46,6 +46,9 @@
             "presentation": {
                 "hidden": false,
                 "group": "&&_PRJ_NAME&&"
+            },
+            "liveWatch": {
+                "enabled": true
             }
         },
         // When using 'attach', make sure your program is running on the board and that your executable matches
@@ -92,5 +95,8 @@
             "presentation": {
                 "hidden": false,
                 "group": "&&_PRJ_NAME&&"
+            },
+            "liveWatch": {
+                "enabled": true
             }
         }

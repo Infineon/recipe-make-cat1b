@@ -13,9 +13,14 @@ This release of the AIROC™ CYW20829 and PSOC™ Control C3 GNU make build reci
     * GCC
     * IAR
     * ARM Compiler 6
-    * LLVM Embedded Toolchain for Arm (Experimental)
+    * LLVM Embedded Toolchain for Arm
 
 ### What Changed?
+#### v2.8.2
+* Added post-build script export to IAR Embedded Workbench and Keil uVision IDEs.
+* Improved Cortex-M Security Extensions (CMSE) support.
+* Improved memory utilization reporting.
+
 #### v2.8.1
 * Updated launch configurations to reference the latest OpenOCD config.
 * Fixed an issue where different JLink versions could be used for programming and debugging.
@@ -73,7 +78,7 @@ This version of the AIROC™ CYW20829 and PSOC™ Control C3 build system was va
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox Software Environment         | 3.5     |
+| ModusToolbox Software Environment         | 3.6     |
 | GCC Compiler                              | 11.3    |
 | IAR Compiler                              | 9.3     |
 | ARM Compiler                              | 6.16    |
