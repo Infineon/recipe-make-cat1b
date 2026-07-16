@@ -6,8 +6,8 @@
 #
 ################################################################################
 # \copyright
-# (c) 2022-2025, Cypress Semiconductor Corporation (an Infineon company)
-# or an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
+# Copyright (c) 2022-2026, Infineon Technologies AG, or an affiliate of
+# Infineon Technologies AG. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,12 +28,16 @@ MTB_RECIPE__IDE_SUPPORTED:=eclipse vscode uvision5 ewarm8
 
 _MTB_RECIPE__IDE_EXPORT_INTERFACE_VERSION=interface_version_4
 _MTB_RECIPE__IDE_RECIPE_DIR:=$(MTB_TOOLS__RECIPE_DIR)/make/recipe/$(_MTB_RECIPE__IDE_EXPORT_INTERFACE_VERSION)
+ifeq ($(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR),KitProg3)
+_MTB_RECIPE__HIDE_ADVANCED_PROGRAM:=false
+endif
 include $(_MTB_RECIPE__IDE_RECIPE_DIR)/recipe_ide_common.mk
 
 # Path to debug certificate
 ifeq ($(_MTB_RECIPE__IS_DIE_PSC3),true)
 ifneq ($(CY_DBG_CERTIFICATE_PATH),)
 CY_DBG_CERTIFICATE_PATH_APPLICATION:=$(CY_DBG_CERTIFICATE_PATH)
+_USER_DEFINED_CERT=true
 else
 CY_DBG_CERTIFICATE_PATH:=./packets/debug_token.bin
 CY_DBG_CERTIFICATE_PATH_APPLICATION:=./packets/debug_token.bin
@@ -89,11 +93,7 @@ _MTB_RECIPE__IDE_TEMPLATE_SUBDIR:=ram/PSC3
 endif
 else
 ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
-ifeq ($(BITFILE_PROVISIONED),false)
-_MTB_RECIPE__IDE_TEMPLATE_SUBDIR:=flash/PSC3/virgin
-else
-_MTB_RECIPE__IDE_TEMPLATE_SUBDIR:=flash/PSC3/normal
-endif
+_MTB_RECIPE__IDE_TEMPLATE_SUBDIR:=flash/PSC3
 else
 _MTB_RECIPE__IDE_TEMPLATE_SUBDIR:=flash/20829
 endif
@@ -118,38 +118,37 @@ endif
 # Eclipse
 ##############################################
 
-eclipse_generate: recipe_eclipse_text_replacement_data_file recipe_eclipse_meta_replacement_data_file_common recipe_eclipse_meta_replacement_data_file_cat1b
+eclipse_generate: recipe_eclipse_text_replacement_data_file recipe_eclipse_meta_replacement_data_file_common
 eclipse_generate: MTB_CORE__EXPORT_CMDLINE += -textdata $(_MTB_RECIPE__IDE_TEXT_DATA_FILE)  -metadata $(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE) -textregexdata $(_MTB_RECIPE__ECLIPSE_TEMPLATE_REGEX_DATA_FILE)
 
 recipe_eclipse_meta_replacement_data_file_common:
 	$(call mtb__file_write,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),UUID=&&PROJECT_UUID&&)
-	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/eclipse/CM33/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/any=.mtbLaunchConfigs)
 ifneq (,$(_MTB_RECIPE__IS_MULTI_CORE_APPLICATION))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),APPLICATION_UUID=&&APPLICATION_UUID&&)
 ifneq (,$(_MTB_RECIPE__IS_FIRST_PRJ))
-	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),UUID=&&PROJECT_UUID_1&&)
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/App/flash/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/singlecore=../.mtbLaunchConfigs)
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/App/internal=../.mtbLaunchConfigs)
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),UPDATE_APPLICATION_PREF_FILE=1)
 else
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=../.mtbLaunchConfigs=../.mtbLaunchConfigs)
 endif
-ifneq (,$(_MTB_RECIPE__IS_LAST_PRJ))
-	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),UUID=&&PROJECT_UUID_2&&)
-endif #(,$(_MTB_RECIPE__IS_LAST_PRJ))
-endif
-
-recipe_eclipse_meta_replacement_data_file_cat1b:
-	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/Proj/any=.mtbLaunchConfigs)
-ifneq (,$(_MTB_RECIPE__IS_MULTI_CORE_APPLICATION))
-# multi-core
-ifneq (,$(_MTB_RECIPE__IS_FIRST_PRJ))
-	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/eclipse/App/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)=../.mtbLaunchConfigs)
-	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/App/internal=../.mtbLaunchConfigs)
-endif #(,$(_MTB_RECIPE__IS_FIRST_PRJ))
 else
 # single-core
-	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/eclipse/CM33/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/single=.mtbLaunchConfigs)
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/Proj/single/internal=.mtbLaunchConfigs)
 endif #(,$(_MTB_RECIPE__IS_MULTI_CORE_APPLICATION))
+ifeq ($(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES),)
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/Proj/any=.mtbLaunchConfigs)
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/Proj/flash/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/any=.mtbLaunchConfigs)
+endif
+ifeq ($(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR),KitProg3)
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/eclipse/CM33/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/KitProg3/advanced=.mtbLaunchConfigs)
+ifneq (,$(_MTB_RECIPE__IS_MULTI_CORE_APPLICATION))
+ifneq (,$(_MTB_RECIPE__IS_FIRST_PRJ))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEMPLATE_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/eclipse/App/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/KitProg3/advanced=../.mtbLaunchConfigs)
+endif
+endif
+endif
+
 
 recipe_eclipse_text_replacement_data_file:
 	$(call mtb__file_write,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__JLINK_CFG&&=$(_MTB_RECIPE__JLINK_DEVICE_CFG))
@@ -186,8 +185,18 @@ ifneq ($(filter NON_SECURE,$(VCORE_ATTRS)),)
 else
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__SYM_FILE_S&&=$(_MTB_RECIPE__ECLIPSE_SYM_FILE))
 endif
+ifeq ($(_MTB_RECIPE__IS_DIE_CYW20829),true)
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__QSPI_FLM_FOR_PGMGUI&&=$(call mtb__path_normalize,$(MTB_TOOLS__PRJ_DIR)/$(patsubst %/,%,$(CY_QSPI_FLM_DIR_OUTPUT))/CYW208xx_SMIF.FLM))
+else
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__QSPI_FLM_FOR_PGMGUI&&=)
+endif
+ifeq ($(_USER_DEFINED_CERT),true)
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__DBG_CERT_PATH_ABS&&=$(CY_DBG_CERTIFICATE_PATH))
+else
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_TEXT_DATA_FILE),&&_MTB_RECIPE__DBG_CERT_PATH_ABS&&=$(call mtb__path_normalize,$(MTB_TOOLS__PRJ_DIR)/$(CY_DBG_CERTIFICATE_PATH)))
+endif
 
-.PHONY: recipe_eclipse_meta_replacement_data_file_common recipe_eclipse_meta_replacement_data_file_cat1b recipe_eclipse_text_replacement_data_file
+.PHONY: recipe_eclipse_meta_replacement_data_file_common recipe_eclipse_text_replacement_data_file
 
 ##############################################
 # VSCode
@@ -290,20 +299,6 @@ endif
 .PHONY: recipe_vscode_text_replacement_data_file recipe_vscode_meta_replacement_data_file recipe_vscode_regex_replacement_data_file
 
 ##############################################
-# EW UV
-##############################################
-_MTB_RECIPE__IDE_BUILD_DATA_FILE:=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/recipe_ide_build_data.txt
-
-ewarm8 uvision5: MTB_CORE__EXPORT_CMDLINE += -build_data $(_MTB_RECIPE__IDE_BUILD_DATA_FILE)
-ewarm8 uvision5: recipe_ide_build_data_file
-
-recipe_ide_build_data_file:
-	$(call mtb__file_write,$(_MTB_RECIPE__IDE_BUILD_DATA_FILE),LINKER_SCRIPT=$(MTB_RECIPE__LINKER_SCRIPT))
-	$(call mtb__file_append,$(_MTB_RECIPE__IDE_BUILD_DATA_FILE),LDFLAGS=$(_MTB_RECIPE__MXSV2_LDFLAGS))
-
-.PHONY: recipe_ide_build_data_file
-
-##############################################
 # UV
 ##############################################
 ifeq ($(_MTB_RECIPE__IS_DIE_PSC3),true)
@@ -316,17 +311,69 @@ _MTB_RECIPE__CMSIS_VENDOR_NAME:=Infineon
 _MTB_RECIPE__CMSIS_VENDOR_ID:=7
 _MTB_RECIPE__CMSIS_PNAME:=Cortex-M33
 
+# Debug and program ini files
+ifneq ($(_MTB_RECIPE__IS_DIE_PSC3),)
+ifeq ($(SECURED_BOOT),TRUE)
+_MTB_RECIPE__PROGRAM_INI_CONTENT:=LOAD $$L\..\build\$(TARGET)\Debug\$(APPNAME).hex
+else
+_MTB_RECIPE__PROGRAM_INI_CONTENT:=LOAD $$L%L 0x20000000
+endif
+else
+_MTB_RECIPE__PROGRAM_INI_CONTENT:=LOAD $$L\..\build\last_config\$(APPNAME).final.hex
+endif
+
+_MTB_RECIPE__PROGRAM_INI_FILE:=$(MTB_TOOLS__PRJ_DIR)/program.ini
+_MTB_RECIPE__DEBUG_INI_FILE:=$(MTB_TOOLS__PRJ_DIR)/debug.ini
+
+uvision5: recipe_uvision_program_ini_file recipe_uvision_debug_ini_file
+
+recipe_uvision_program_ini_file:
+	$(call mtb__file_write,$(_MTB_RECIPE__PROGRAM_INI_FILE),$(_MTB_RECIPE__PROGRAM_INI_CONTENT))
+
+recipe_uvision_debug_ini_file:
+	$(call mtb__file_write,$(_MTB_RECIPE__DEBUG_INI_FILE),LOAD $$L%L NOCODE CLEAR INCREMENTAL)
+	$(call mtb__file_append,$(_MTB_RECIPE__DEBUG_INI_FILE),g$(MTB__COMMA) main)
+
+# uVision build data file
+_MTB_RECIPE__UVISION_BUILD_DATA_FILE:=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/recipe_ide_build_data.txt
+
+uvision5: MTB_CORE__EXPORT_CMDLINE += -build_data $(_MTB_RECIPE__UVISION_BUILD_DATA_FILE)
+uvision5: recipe_uvision_build_data_file
+
+recipe_uvision_build_data_file:
+	$(call mtb__file_write,$(_MTB_RECIPE__UVISION_BUILD_DATA_FILE),LINKER_SCRIPT=$(MTB_RECIPE__LINKER_SCRIPT))
+	$(call mtb__file_append,$(_MTB_RECIPE__UVISION_BUILD_DATA_FILE),LDFLAGS=$(_MTB_RECIPE__MXSV2_LDFLAGS))
+	$(call mtb__file_append,$(_MTB_RECIPE__UVISION_BUILD_DATA_FILE),FPU=$(_MTB_RECIPE_CMSIS__DFPU))
+	$(call mtb__file_append,$(_MTB_RECIPE__UVISION_BUILD_DATA_FILE),LCS=$(_MTB_RECIPE_CMSIS__DSECURE))
+.PHONY: recipe_uvision_build_data_file
+
+# uVision DFP data file
 _MTB_RECIPE__IDE_DFP_DATA_FILE:=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/recipe_ide_dfp_data.txt
 
-uvision5: recipe_uvision5_dfp_data_file
+uvision5: recipe_uvision_dfp_data_file
 uvision5: MTB_CORE__EXPORT_CMDLINE += -dfp_data $(_MTB_RECIPE__IDE_DFP_DATA_FILE)
 
-recipe_uvision5_dfp_data_file:
+recipe_uvision_dfp_data_file:
 	$(call mtb__file_write,$(_MTB_RECIPE__IDE_DFP_DATA_FILE),DEVICE=$(DEVICE))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_DFP_DATA_FILE),DFP_NAME=$(_MTB_RECIPE__CMSIS_ARCH_NAME))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_DFP_DATA_FILE),VENDOR_NAME=$(_MTB_RECIPE__CMSIS_VENDOR_NAME))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_DFP_DATA_FILE),VENDOR_ID=$(_MTB_RECIPE__CMSIS_VENDOR_ID))
 	$(call mtb__file_append,$(_MTB_RECIPE__IDE_DFP_DATA_FILE),PNAME=$(_MTB_RECIPE__CMSIS_PNAME))
+	$(call mtb__file_append,$(_MTB_RECIPE__IDE_DFP_DATA_FILE),DEBUG_INI_FILE=.\debug.ini)
+.PHONY: recipe_uvision_program_ini_file recipe_uvision_debug_ini_file recipe_uvision_dfp_data_file
+
+##############################################
+# EW
+##############################################
+_MTB_RECIPE__EWARM_BUILD_DATA_FILE:=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/recipe_ide_build_data.txt
+
+ewarm8: MTB_CORE__EXPORT_CMDLINE += -build_data $(_MTB_RECIPE__EWARM_BUILD_DATA_FILE)
+ewarm8: recipe_ewarm_build_data_file
+
+recipe_ewarm_build_data_file:
+	$(call mtb__file_write,$(_MTB_RECIPE__EWARM_BUILD_DATA_FILE),LINKER_SCRIPT=$(MTB_RECIPE__LINKER_SCRIPT))
+	$(call mtb__file_append,$(_MTB_RECIPE__EWARM_BUILD_DATA_FILE),LDFLAGS=$(_MTB_RECIPE__MXSV2_LDFLAGS))
+.PHONY: recipe_ewarm_build_data_file
 
 ##############################################
 # Combiner/Signer Integration
@@ -336,19 +383,20 @@ ifneq ($(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES),)
 _MTB_RECIPE__VSCODE_CS_TASKS_JSON:=$(_MTB_RECIPE__IDE_CORE_SCRIPT_DIR)/vscode/tasks_program_sign_combine.json
 _MTB_RECIPE__VSCODE_CS_LAUNCH_JSON:=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/vscode/$(MTB_RECIPE__CORE)/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/launch_combine_sign.json
 
-_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_MEATA_DATA_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/eclipse_combine_sign_meta_data.txt
+_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/eclipse_combine_sign_meta_data.txt
 _MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME:=.mtbLaunchConfigs/$(_MTB_RECIPE__ECLIPSE_APPLICATION_NAME).&&MTB_COMBINE_SIGN_&&IDX&&_CONFIG_NAME&&
 
-eclipse_generate: MTB_CORE__EXPORT_CMDLINE += -metadata $(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_MEATA_DATA_FILE)
+eclipse_generate: MTB_CORE__EXPORT_CMDLINE += -metadata $(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE)
 eclipse_generate: recipe_eclipse_combine_sign_meta
 
 recipe_eclipse_combine_sign_meta:
-	$(call mtb__file_write,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_MEATA_DATA_FILE))
-ifneq ($(wildcard $(_MTB_RECIPE__IDE_TEMPLATE_DIR)/eclipse/$(MTB_RECIPE__CORE)/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/combine_sign/Debug.launch),)
-	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_MEATA_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/eclipse/$(MTB_RECIPE__CORE)/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/combine_sign/Debug.launch=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Debug $(_MTB_RECIPE__PROGRAM_INTERFACE_LAUNCH_SUFFIX).launch)
-	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_MEATA_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_TEMPLATE_DIR)/eclipse/$(MTB_RECIPE__CORE)/$(_MTB_RECIPE__IDE_TEMPLATE_SUBDIR)/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/combine_sign/Attach.launch=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Attach $(_MTB_RECIPE__PROGRAM_INTERFACE_LAUNCH_SUFFIX).launch)
-	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_MEATA_DATA_FILE),TEMPLATE_REPEAT=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Debug $(_MTB_RECIPE__PROGRAM_INTERFACE_LAUNCH_SUFFIX).launch=$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES))
-	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_MEATA_DATA_FILE),TEMPLATE_REPEAT=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Attach $(_MTB_RECIPE__PROGRAM_INTERFACE_LAUNCH_SUFFIX).launch=$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES))
-endif
+	$(call mtb__file_write,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE))
+	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/Proj/flash/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/combine_sign/Debug.launch=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Debug $(_MTB_RECIPE__PROGRAM_INTERFACE_LAUNCH_SUFFIX).launch)
+	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/Proj/flash/$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)/combine_sign/Attach.launch=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Attach $(_MTB_RECIPE__PROGRAM_INTERFACE_LAUNCH_SUFFIX).launch)
+	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE),TEMPLATE_REPLACE=$(_MTB_RECIPE__IDE_RECIPE_DIR)/Proj/combine_sign/Program.launch=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Program.launch)
+
+	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE),TEMPLATE_REPEAT=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Debug $(_MTB_RECIPE__PROGRAM_INTERFACE_LAUNCH_SUFFIX).launch=$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES))
+	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE),TEMPLATE_REPEAT=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Attach $(_MTB_RECIPE__PROGRAM_INTERFACE_LAUNCH_SUFFIX).launch=$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES))
+	$(call mtb__file_append,$(_MTB_RECIPE__ECLIPSE_COMBINE_SIGN_META_DATA_FILE),TEMPLATE_REPEAT=$(_MTB_RECIPE__ECLIPSE_CS_DST_BASE_NAME) Program.launch=$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__IDE_PRJ_DIR_NAME)_HEX_FILES))
 
 endif

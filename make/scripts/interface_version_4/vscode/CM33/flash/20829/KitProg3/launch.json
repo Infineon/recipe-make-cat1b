@@ -5,6 +5,7 @@
             "cwd": "${workspaceFolder}",
             "executable": "&&_MTB_RECIPE__ELF_FILE&&",
             "servertype": "openocd",
+            "debuggerArgs": ["-l", "30"],
             "searchDir": [
                 "${workspaceFolder}",
                 "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/",

@@ -5,8 +5,7 @@
             "cwd": "${workspaceFolder}",
             "executable": "&&_MTB_RECIPE__ELF_FILE&&",
             "servertype": "openocd",
-            "interface": "&&_MTB_RECIPE__PROBE_INTERFACE&&",
-            "serialNumber": "&&_MTB_RECIPE__PROBE_SERIAL&&",
+            "debuggerArgs": ["-l", "30"],
             "searchDir": [
                 "${workspaceFolder}",
                 "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"
@@ -52,8 +51,6 @@
             "cwd": "${workspaceFolder}",
             "executable": "&&_MTB_RECIPE__ELF_FILE&&",
             "servertype": "openocd",
-            "interface": "&&_MTB_RECIPE__PROBE_INTERFACE&&",
-            "serialNumber": "&&_MTB_RECIPE__PROBE_SERIAL&&",
             "searchDir": [
                 "${workspaceFolder}",
                 "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"
@@ -92,8 +89,6 @@
             "cwd": "${workspaceFolder}",
             "executable": "&&_MTB_RECIPE__ELF_FILE&&",
             "servertype": "openocd",
-            "interface": "&&_MTB_RECIPE__PROBE_INTERFACE&&",
-            "serialNumber": "&&_MTB_RECIPE__PROBE_SERIAL&&",
             "searchDir": [
                 "${workspaceFolder}",
                 "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"

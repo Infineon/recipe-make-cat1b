@@ -16,6 +16,11 @@ This release of the AIROC™ CYW20829 and PSOC™ Control C3 GNU make build reci
     * LLVM Embedded Toolchain for Arm
 
 ### What Changed?
+#### v2.9.0
+* Added Advanced KitProg3 Programming task in VS Code export.
+* Enhanced project export to Keil uVision IDE.
+* Resolved several issues with memory utilization reporting.
+
 #### v2.8.2
 * Added post-build script export to IAR Embedded Workbench and Keil uVision IDEs.
 * Improved Cortex-M Security Extensions (CMSE) support.
@@ -69,7 +74,7 @@ This release of the AIROC™ CYW20829 and PSOC™ Control C3 GNU make build reci
 * Initial release
 
 ### Product/Asset Specific Instructions
-Builds require that the ModusToolbox tools be installed on your machine. This comes with the ModusToolbox install. On Windows machines, it is recommended that CLI builds be executed using the Cygwin.bat located in ModusToolBox/tools_x.y/modus-shell install directory. This guarantees a consistent shell environment for your builds.
+Builds require that the ModusToolbox™ tools be installed on your machine. This comes with the ModusToolbox™ install. On Windows machines, it is recommended that CLI builds be executed using the Cygwin.bat located in ModusToolBox/tools_x.y/modus-shell install directory. This guarantees a consistent shell environment for your builds.
 
 To list the build options, run the "help" target by typing "make help" in CLI. For a verbose documentation on a specific subject type "make help CY_HELP={variable/target}", where "variable" or "target" is one of the listed make variables or targets.
 
@@ -78,16 +83,15 @@ This version of the AIROC™ CYW20829 and PSOC™ Control C3 build system was va
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox Software Environment         | 3.6     |
-| GCC Compiler                              | 11.3    |
-| IAR Compiler                              | 9.3     |
-| ARM Compiler                              | 6.16    |
+| ModusToolbox™ Software Environment        | 3.8     |
+| GCC Compiler                              | 14.2.1  |
+| IAR Compiler                              | 9.70.2  |
+| ARM Compiler                              | 6.22    |
 
 Minimum required ModusToolbox Software Environment: v3.4
 
 ### More information
 * [Infineon GitHub](https://github.com/Infineon)
-* [ModusToolbox](https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software)
-
+* [ModusToolbox™](https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software)
 ---
-(c) 2022-2025, Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation. All rights reserved.
+Copyright (c) 2022-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG. All rights reserved.

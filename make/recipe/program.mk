@@ -7,8 +7,8 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company)
-# or an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
+# Copyright (c) 2018-2026, Infineon Technologies AG, or an affiliate of
+# Infineon Technologies AG. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,6 +48,12 @@ _MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(MTB_RECIPE__LAST_CONFIG_DIR)/$(APPNAME).final
 endif #ifeq ($(APPTYPE),ram)
 endif #ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
 endif #($(TOOLCHAIN),A_Clang)
+
+# Use combiner-signer hex file if specified
+_MTB_RECIPE__COMBINE_SIGN_IDX=$(lastword $(MTB_COMBINE_SIGN_$(notdir $(realpath $(MTB_TOOLS__PRJ_DIR)))_HEX_FILES))
+ifneq ($(MTB_COMBINE_SIGN_$(_MTB_RECIPE__COMBINE_SIGN_IDX)_HEX_PATH),)
+_MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__COMBINE_SIGN_IDX)_HEX_PATH)
+endif
 
 # Multi-core application programming: always use combined HEX image
 ifneq ($(_MTB_RECIPE__APP_HEX_FILE),)
@@ -142,4 +148,24 @@ _MTB_RECIPE__JLINK_LOAD_OFFSET:=0
 endif
 _MTB_RECIPE__JLINK_DEVICE_CFG_PROGRAM=$(_MTB_RECIPE__JLINK_DEVICE_CFG)
 _MTB_RECIPE__JLINK_DEBUG_ARGS=-if $(_MTB_RECIPE__PROBE_INTERFACE) -device $(_MTB_RECIPE__JLINK_DEVICE_CFG) -endian little -speed auto -port 2334 -swoport 2335 -telnetport 2336 -vd -ir -localhostonly 1 -singlerun -strict -timeout 0 -nogui
+
+CY_QSPI_FLM_DIR_OUTPUT?=$(CY_QSPI_FLM_DIR)
+
+# Advanced KitProg3 Programming extra arguments
+# Use CY_DBG_CERTIFICATE_PATH if user-provided; otherwise default based on project structure.
+_MTB_RECIPE__DBG_CERT_FOR_ADVANCED_PROGRAM:=$(CY_DBG_CERTIFICATE_PATH)
+ifeq ($(_MTB_RECIPE__DBG_CERT_FOR_ADVANCED_PROGRAM),)
+ifneq (,$(_MTB_RECIPE__IS_DIE_PSC3))
+_MTB_RECIPE__DBG_CERT_FOR_ADVANCED_PROGRAM:=./packets/debug_token.bin
+ifneq (,$(_MTB_RECIPE__IS_MULTI_CORE_APPLICATION))
+_MTB_RECIPE__DBG_CERT_FOR_ADVANCED_PROGRAM:=../packets/debug_token.bin
+endif
+else
+_MTB_RECIPE__DBG_CERT_FOR_ADVANCED_PROGRAM:=./packets/debug_cert.bin
+endif
+endif
+_MTB_RECIPE__ADVANCED_PROGRAM_EXTRA_ARGS:=--debug-cert="$(call mtb__path_normalize,$(_MTB_RECIPE__DBG_CERT_FOR_ADVANCED_PROGRAM))"
+ifneq (,$(_MTB_RECIPE__IS_DIE_CYW20829))
+_MTB_RECIPE__ADVANCED_PROGRAM_EXTRA_ARGS+=--qspi-flm "$(call mtb__path_normalize,$(patsubst %/,%,$(CY_QSPI_FLM_DIR_OUTPUT))/CYW208xx_SMIF.FLM)"
+endif
 

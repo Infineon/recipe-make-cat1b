@@ -5,6 +5,7 @@
             "cwd": "${workspaceFolder}",
             "executable": "&&_MTB_RECIPE__ELF_FILE&&",
             "servertype": "jlink",
+            "debuggerArgs": ["-l", "30"],
             "device": "&&_MTB_RECIPE__JLINK_CFG&&",
             "interface": "&&_MTB_RECIPE__PROBE_INTERFACE&&",
             "serialNumber": "&&_MTB_RECIPE__PROBE_SERIAL&&",

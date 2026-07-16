@@ -6,8 +6,8 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company)
-# or an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
+# Copyright (c) 2018-2026, Infineon Technologies AG, or an affiliate of
+# Infineon Technologies AG. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/defines_common.mk
 ################################################################################
 _MTB_RECIPE__PROGRAM_INTERFACE_SUPPORTED:=KitProg3 JLink
 
-# Compactibility interface for this recipe make
+# Compatibility interface for this recipe make
 MTB_RECIPE__INTERFACE_VERSION:=2
 
 MTB_RECIPE__NINJA_SUPPORT:=1 2

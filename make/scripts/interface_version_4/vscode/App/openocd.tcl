@@ -5,6 +5,7 @@ transport select &&_MTB_RECIPE__PROBE_INTERFACE&&
 source [find target/&&_MTB_RECIPE__OPEN_OCD_FILE&&]
 &&_MTB_RECIPE__OPENOCD_TARGET_VAR&&.cm33 configure -rtos auto -rtos-wipe-on-reset-halt 1
 gdb_breakpoint_override hard
+&&_MTB_RECIPE__OPENOCD_PROBE_FREQUENCY_CMD&&
 CDLiveWatchSetup//PSC3 Only//
 if {$::ENABLE_ACQUIRE} {//PSC3 Only//
     init//PSC3 Only//
