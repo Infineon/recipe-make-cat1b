@@ -16,6 +16,10 @@ This release of the AIROC™ CYW20829 and PSOC™ Control C3 GNU make build reci
     * LLVM Embedded Toolchain for Arm
 
 ### What Changed?
+#### v2.9.1
+* Fixed soft-float configuration for ARM and IAR toolchains. `VFP_SELECT=softfloat` builds no longer select the FPv5-SP hardware FPU.
+* Updated IAR toolchain flags to stop forcing --no_dwarf4 and use the compiler default DWARF format.
+
 #### v2.9.0
 * Added Advanced KitProg3 Programming task in VS Code export.
 * Enhanced project export to Keil uVision IDE.
